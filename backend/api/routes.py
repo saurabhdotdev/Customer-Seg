@@ -6,7 +6,30 @@ import pandas as pd
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import PlainTextResponse, FileResponse
 from pydantic import BaseModel
-from backend.config import DATA_RAW_PATH, DATA_SEGMENTS_PATH, METADATA_PATH, SCALER_PATH, KMEANS_MODEL_PATH, CLASSIFIER_PATH, LTV_REGRESSOR_PATH, PCA_PATH
+from backend.config import DATA_RAW_PATH, DATA_SEGMENTS_PATH, METADATA_PATH, SCALER_PATH, KMEANS_MODEL_PATH, CLASSIFIER_PATH, LTV_REGRESSOR_PATH, PCA_PATH, BASE_DATA_SEGMENTS, BASE_METADATA_PATH
+
+def get_active_df() -> pd.DataFrame:
+    if os.path.exists(DATA_SEGMENTS_PATH):
+        return pd.read_csv(DATA_SEGMENTS_PATH)
+    elif os.path.exists(BASE_DATA_SEGMENTS):
+        return pd.read_csv(BASE_DATA_SEGMENTS)
+    else:
+        raise HTTPException(status_code=404, detail="Dataset not found. Please upload a dataset or run training.")
+
+def get_active_meta() -> dict:
+    if os.path.exists(METADATA_PATH):
+        try:
+            with open(METADATA_PATH, 'r') as f:
+                return json.load(f)
+        except Exception:
+            pass
+    if os.path.exists(BASE_METADATA_PATH):
+        try:
+            with open(BASE_METADATA_PATH, 'r') as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {}
 from backend.api.schemas import CustomerInputSchema, PredictionResponseSchema, CampaignCopyRequestSchema, CampaignCopyResponseSchema
 from src.data.preprocessor import CustomerDataPreprocessor
 from src.visualization.dimensionality import DimensionalityReducer
@@ -102,10 +125,7 @@ def reset_to_demo_dataset():
 
 @router.get("/overview")
 def get_overview():
-    if not os.path.exists(DATA_SEGMENTS_PATH):
-        raise HTTPException(status_code=404, detail="Processed dataset not found. Run training demo first.")
-        
-    df = pd.read_csv(DATA_SEGMENTS_PATH)
+    df = get_active_df()
     
     total_customers = len(df)
     total_revenue = float(df['Monetary_Spend'].sum())
@@ -128,30 +148,17 @@ def get_overview():
 
 @router.get("/benchmark")
 def get_benchmark():
-    if not os.path.exists(METADATA_PATH):
-        raise HTTPException(status_code=404, detail="Benchmark metadata not found.")
-        
-    with open(METADATA_PATH, 'r') as f:
-        meta = json.load(f)
-        
+    meta = get_active_meta()
     return meta.get("benchmark_comparison", [])
 
 @router.get("/analytics/rfm")
 def get_rfm_analytics():
-    if not os.path.exists(DATA_SEGMENTS_PATH):
-        raise HTTPException(status_code=404, detail="Dataset not found.")
-
-    df = pd.read_csv(DATA_SEGMENTS_PATH)
+    df = get_active_df()
     return RFMAnalyticsEngine.generate_rfm_analysis(df)
 
 @router.get("/model/info")
 def get_model_info():
-    if not os.path.exists(METADATA_PATH):
-        raise HTTPException(status_code=404, detail="Model metadata not found.")
-
-    with open(METADATA_PATH, 'r') as f:
-        meta = json.load(f)
-
+    meta = get_active_meta()
     return {
         "project_positioning": meta.get("project_positioning"),
         "production_model": meta.get("production_model", "K-Means Clustering"),
@@ -165,30 +172,20 @@ def get_model_info():
 
 @router.get("/segments/explainability")
 def get_segment_explainability():
-    if not os.path.exists(DATA_SEGMENTS_PATH):
-        raise HTTPException(status_code=404, detail="Dataset not found.")
+    meta = get_active_meta()
+    if meta.get("segment_explanations"):
+        return meta["segment_explanations"]
 
-    if os.path.exists(METADATA_PATH):
-        with open(METADATA_PATH, 'r') as f:
-            meta = json.load(f)
-        if meta.get("segment_explanations"):
-            return meta["segment_explanations"]
-
-    df = pd.read_csv(DATA_SEGMENTS_PATH)
+    df = get_active_df()
     return SegmentIntelligenceEngine.build_segment_explanations(df, cluster_col='KMeans_Cluster')
 
 @router.get("/recommendations/campaigns")
 def get_campaign_recommendations():
-    if not os.path.exists(DATA_SEGMENTS_PATH):
-        raise HTTPException(status_code=404, detail="Dataset not found.")
+    meta = get_active_meta()
+    if meta.get("campaign_recommendations"):
+        return meta["campaign_recommendations"]
 
-    if os.path.exists(METADATA_PATH):
-        with open(METADATA_PATH, 'r') as f:
-            meta = json.load(f)
-        if meta.get("campaign_recommendations"):
-            return meta["campaign_recommendations"]
-
-    df = pd.read_csv(DATA_SEGMENTS_PATH)
+    df = get_active_df()
     personas_data = CustomerPersonaGenerator.analyze_clusters(df, cluster_col='KMeans_Cluster')
     return SegmentIntelligenceEngine.build_campaign_recommendations(df, personas_data)
 
@@ -199,25 +196,17 @@ def generate_campaign_copy(req: CampaignCopyRequestSchema):
 
 @router.get("/anomalies")
 def get_anomaly_summary():
-    if not os.path.exists(DATA_SEGMENTS_PATH):
-        raise HTTPException(status_code=404, detail="Dataset not found.")
+    meta = get_active_meta()
+    if meta.get("anomaly_summary"):
+        return meta["anomaly_summary"]
 
-    if os.path.exists(METADATA_PATH):
-        with open(METADATA_PATH, 'r') as f:
-            meta = json.load(f)
-        if meta.get("anomaly_summary"):
-            return meta["anomaly_summary"]
-
-    df = pd.read_csv(DATA_SEGMENTS_PATH)
+    df = get_active_df()
     return SegmentIntelligenceEngine.summarize_anomalies(df, top_n=25)
 
 @router.get("/customers/high-risk")
 def get_high_risk_customers(limit: int = 25):
-    if not os.path.exists(DATA_SEGMENTS_PATH):
-        raise HTTPException(status_code=404, detail="Dataset not found.")
-
     limit = max(1, min(limit, 100))
-    df = pd.read_csv(DATA_SEGMENTS_PATH)
+    df = get_active_df()
     high_risk = df.sort_values(
         ["Churn_Risk_Index", "Monetary_Spend"], ascending=[False, False]
     ).head(limit)
@@ -380,35 +369,9 @@ def get_cohort_retention_data():
     if not os.path.exists(DATA_SEGMENTS_PATH):
         raise HTTPException(status_code=404, detail="Dataset not found.")
         
-    df = pd.read_csv(DATA_SEGMENTS_PATH)
-    return CustomerCohortEngine.calculate_cohort_retention(df, cluster_col='KMeans_Cluster')
-
-@router.post("/analytics/ask")
-def query_analytics(req: AnalyticsQueryRequest):
-    if not os.path.exists(DATA_SEGMENTS_PATH) or not os.path.exists(METADATA_PATH):
-        raise HTTPException(status_code=404, detail="Data or metadata missing.")
-        
-    df = pd.read_csv(DATA_SEGMENTS_PATH)
-    with open(METADATA_PATH, 'r') as f:
-        meta = json.load(f)
-        
-    return CustomerAnalyticsQueryEngine.answer_query(req.query, df, meta)
-
-@router.get("/personas")
-def get_personas():
-    if not os.path.exists(DATA_SEGMENTS_PATH):
-        raise HTTPException(status_code=404, detail="Dataset not found.")
-        
-    df = pd.read_csv(DATA_SEGMENTS_PATH)
-    personas_data = CustomerPersonaGenerator.analyze_clusters(df, cluster_col='KMeans_Cluster')
-    return personas_data
-
 @router.get("/visualization/pca3d")
 def get_pca3d_data():
-    if not os.path.exists(DATA_SEGMENTS_PATH):
-        raise HTTPException(status_code=404, detail="Dataset not found.")
-        
-    df = pd.read_csv(DATA_SEGMENTS_PATH)
+    df = get_active_df()
     
     if len(df) > 1500:
         sample_df = df.sample(n=1500, random_state=42).reset_index(drop=True)
