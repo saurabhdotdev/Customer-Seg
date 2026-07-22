@@ -59,13 +59,16 @@ class LoginRequestSchema(BaseModel):
     email: str
     password: str
 
+import html
+
 @router.post("/auth/register")
 def register_user(req: RegisterRequestSchema):
     email_clean = req.email.strip().lower()
-    if not email_clean or "@" not in email_clean:
+    name_clean = html.escape(req.name.strip())
+    if not email_clean or "@" not in email_clean or len(email_clean) > 100:
         raise HTTPException(status_code=400, detail="Please provide a valid email address.")
-    if len(req.password) < 4:
-        raise HTTPException(status_code=400, detail="Password must be at least 4 characters long.")
+    if len(req.password) < 6:
+        raise HTTPException(status_code=400, detail="Security policy: Password must be at least 6 characters long.")
 
     users = load_users()
     if email_clean in users:
@@ -77,7 +80,7 @@ def register_user(req: RegisterRequestSchema):
     user_obj = {
         "user_id": user_id,
         "email": email_clean,
-        "name": req.name.strip(),
+        "name": name_clean,
         "password": hashed_pwd,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
@@ -85,7 +88,7 @@ def register_user(req: RegisterRequestSchema):
     users[email_clean] = user_obj
     save_users(users)
 
-    token = create_jwt_token(user_id=user_id, email=email_clean, name=user_obj["name"])
+    token = create_jwt_token(user_id=user_id, email=email_clean, name=name_clean)
 
     return {
         "status": "registered",
@@ -94,7 +97,7 @@ def register_user(req: RegisterRequestSchema):
         "user": {
             "user_id": user_id,
             "email": email_clean,
-            "name": user_obj["name"]
+            "name": name_clean
         }
     }
 
@@ -169,21 +172,28 @@ def get_upload_schema():
 
 @router.post("/data/upload")
 async def upload_customer_csv(file: UploadFile = File(...)):
-    if not file.filename.lower().endswith(".csv"):
-        raise HTTPException(status_code=400, detail="Please upload a CSV file.")
+    filename_clean = os.path.basename(file.filename)
+    if not (filename_clean.lower().endswith(".csv") or filename_clean.lower().endswith(".txt")):
+        raise HTTPException(status_code=400, detail="Security policy: Only .csv files are permitted.")
+
+    # Read bytes with 25MB limit check (DoS Prevention)
+    contents = await file.read(25 * 1024 * 1024 + 1)
+    if len(contents) > 25 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Security policy: File size exceeds 25 MB limit.")
 
     try:
-        df = pd.read_csv(file.file)
+        import io
+        df = pd.read_csv(io.BytesIO(contents))
     except Exception as exc:
-        raise HTTPException(status_code=400, detail=f"Could not read CSV: {exc}") from exc
+        raise HTTPException(status_code=400, detail=f"Could not read CSV file: {exc}") from exc
 
     if len(df) < 5:
-        raise HTTPException(status_code=400, detail="Upload at least 5 customers for meaningful segmentation.")
+        raise HTTPException(status_code=400, detail="Upload at least 5 customer rows for meaningful segmentation.")
 
     try:
         os.makedirs(os.path.dirname(DATA_RAW_PATH), exist_ok=True)
         df.to_csv(DATA_RAW_PATH, index=False)
-        metadata = train_customer_segmentation_pipeline(df, data_source=f"uploaded_csv:{file.filename}")
+        metadata = train_customer_segmentation_pipeline(df, data_source=f"uploaded_csv:{filename_clean}")
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
@@ -191,7 +201,7 @@ async def upload_customer_csv(file: UploadFile = File(...)):
 
     return {
         "status": "trained",
-        "filename": file.filename,
+        "filename": filename_clean,
         "total_samples": metadata["total_samples"],
         "optimal_k": metadata["optimal_k"],
         "production_model": metadata["production_model"],

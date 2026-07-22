@@ -6,4 +6,8 @@ __pycache__/
 .vercel/
 data/raw/customer_transactions.csv
 data/processed/customer_features.csv
+users_db.json
+users_*.json
+*.db
+
 
