@@ -151,9 +151,9 @@ class SimulationRequestSchema(BaseModel):
 @router.post("/simulator/simulate")
 def run_retention_simulation(
     req: SimulationRequestSchema,
-    user: dict = Depends(get_current_user_optional)
+    user: dict = Depends(get_current_user_required)
 ):
-    user_id = user["sub"] if user else None
+    user_id = user["sub"]
     df = get_active_df(user_id)
     return RetentionSimulatorEngine.run_simulation(
         df=df,
@@ -250,9 +250,9 @@ def get_job_status(job_id: str):
 async def upload_customer_csv(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
-    user: dict = Depends(get_current_user_optional)
+    user: dict = Depends(get_current_user_required)
 ):
-    user_id = user["sub"] if user else None
+    user_id = user["sub"]
     paths = get_user_paths(user_id)
 
     filename_clean = os.path.basename(file.filename)
@@ -298,8 +298,8 @@ async def upload_customer_csv(
     }
 
 @router.get("/data/status")
-def get_dataset_status(user: dict = Depends(get_current_user_optional)):
-    user_id = user["sub"] if user else None
+def get_dataset_status(user: dict = Depends(get_current_user_required)):
+    user_id = user["sub"]
     meta = get_active_meta(user_id)
     if not meta:
         return {"data_source": "synthetic", "display_name": "Demo Dataset (50,000 Customers)", "is_custom": False, "total_samples": 0}
@@ -315,8 +315,8 @@ def get_dataset_status(user: dict = Depends(get_current_user_optional)):
     }
 
 @router.post("/data/reset")
-def reset_to_demo_dataset(user: dict = Depends(get_current_user_optional)):
-    user_id = user["sub"] if user else None
+def reset_to_demo_dataset(user: dict = Depends(get_current_user_required)):
+    user_id = user["sub"]
     paths = get_user_paths(user_id)
     try:
         if user_id and os.path.exists(paths["user_dir"]):
@@ -328,8 +328,8 @@ def reset_to_demo_dataset(user: dict = Depends(get_current_user_optional)):
         raise HTTPException(status_code=500, detail=f"Reset failed: {exc}") from exc
 
 @router.get("/overview")
-def get_overview(user: dict = Depends(get_current_user_optional)):
-    user_id = user["sub"] if user else None
+def get_overview(user: dict = Depends(get_current_user_required)):
+    user_id = user["sub"]
     df = get_active_df(user_id)
     
     total_customers = len(df)
@@ -352,14 +352,14 @@ def get_overview(user: dict = Depends(get_current_user_optional)):
     }
 
 @router.get("/benchmark")
-def get_benchmark(user: dict = Depends(get_current_user_optional)):
-    user_id = user["sub"] if user else None
+def get_benchmark(user: dict = Depends(get_current_user_required)):
+    user_id = user["sub"]
     meta = get_active_meta(user_id)
     return meta.get("benchmark_comparison", [])
 
 @router.get("/analytics/rfm")
-def get_rfm_analytics(user: dict = Depends(get_current_user_optional)):
-    user_id = user["sub"] if user else None
+def get_rfm_analytics(user: dict = Depends(get_current_user_required)):
+    user_id = user["sub"]
     df = get_active_df(user_id)
     return RFMAnalyticsEngine.compute_rfm_scores(df)
 

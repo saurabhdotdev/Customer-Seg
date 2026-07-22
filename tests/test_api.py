@@ -5,8 +5,23 @@ from backend.main import app
 
 client = TestClient(app)
 
-def test_api_overview_endpoint():
+def get_test_auth_headers():
+    email = f"unittest_{secrets.token_hex(4)}@example.com"
+    reg = client.post("/api/auth/register", json={
+        "name": "Test User",
+        "email": email,
+        "password": "mysecretpassword123"
+    })
+    token = reg.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
+
+def test_api_unauthenticated_returns_401():
     response = client.get("/api/overview")
+    assert response.status_code == 401
+
+def test_api_overview_endpoint():
+    headers = get_test_auth_headers()
+    response = client.get("/api/overview", headers=headers)
     assert response.status_code == 200
     data = response.json()
     assert "total_customers" in data
@@ -14,21 +29,24 @@ def test_api_overview_endpoint():
     assert "optimal_clusters_count" in data
 
 def test_api_personas_endpoint():
-    response = client.get("/api/personas")
+    headers = get_test_auth_headers()
+    response = client.get("/api/personas", headers=headers)
     assert response.status_code == 200
     data = response.json()
     assert "clusters" in data
     assert len(data["clusters"]) >= 1
 
 def test_api_elbow_silhouette_endpoint():
-    response = client.get("/api/analytics/elbow-silhouette")
+    headers = get_test_auth_headers()
+    response = client.get("/api/analytics/elbow-silhouette", headers=headers)
     assert response.status_code == 200
     data = response.json()
     assert "optimal_k" in data
     assert "grid" in data
 
 def test_api_visualization_pca3d_endpoint():
-    response = client.get("/api/visualization/pca3d")
+    headers = get_test_auth_headers()
+    response = client.get("/api/visualization/pca3d", headers=headers)
     assert response.status_code == 200
     data = response.json()
     assert "count" in data
@@ -71,16 +89,19 @@ def test_api_generate_campaign_copy_endpoint():
     assert "ad_headline" in data
 
 def test_api_export_csv_endpoint():
-    response = client.get("/api/export/csv")
+    headers = get_test_auth_headers()
+    response = client.get("/api/export/csv", headers=headers)
     assert response.status_code == 200
     assert "attachment" in response.headers.get("content-disposition", "")
 
 def test_api_reports_executive_endpoint():
-    response = client.get("/api/reports/executive")
+    headers = get_test_auth_headers()
+    response = client.get("/api/reports/executive", headers=headers)
     assert response.status_code == 200
     assert "CUSTOMER INTELLIGENCE EXECUTIVE REPORT" in response.text
 
 def test_api_simulator_endpoint():
+    headers = get_test_auth_headers()
     payload = {
         "target_cohort": "all",
         "engagement_boost_pct": 15.0,
@@ -88,7 +109,7 @@ def test_api_simulator_endpoint():
         "discount_incentive_pct": 10.0,
         "email_touchpoints": 2
     }
-    response = client.post("/api/simulator/simulate", json=payload)
+    response = client.post("/api/simulator/simulate", json=payload, headers=headers)
     assert response.status_code == 200
     data = response.json()
     assert "recovered_revenue" in data
@@ -149,18 +170,20 @@ def test_api_multi_tenant_user_isolation():
 def test_api_async_job_status():
     import io
     import pandas as pd
+    headers = get_test_auth_headers()
     df_test = pd.DataFrame({"Recency_Days": list(range(1, 10)), "Frequency_Orders": list(range(1, 10)), "Monetary_Spend": [100.0 * i for i in range(1, 10)]})
     csv_bytes = df_test.to_csv(index=False).encode()
-    up = client.post("/api/data/upload", files={"file": ("async_test.csv", io.BytesIO(csv_bytes), "text/csv")})
+    up = client.post("/api/data/upload", headers=headers, files={"file": ("async_test.csv", io.BytesIO(csv_bytes), "text/csv")})
     assert up.status_code == 200
     job_id = up.json()["job_id"]
-    job_res = client.get(f"/api/data/job/{job_id}")
+    job_res = client.get(f"/api/data/job/{job_id}", headers=headers)
     assert job_res.status_code == 200
     assert "status" in job_res.json()
 
 def test_api_analytics_ask_endpoint():
+    headers = get_test_auth_headers()
     payload = {"query": "Which segment has the highest churn risk?"}
-    response = client.post("/api/analytics/ask", json=payload)
+    response = client.post("/api/analytics/ask", json=payload, headers=headers)
     assert response.status_code == 200
     data = response.json()
     assert "answer" in data

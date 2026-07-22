@@ -1186,6 +1186,7 @@ function initAuthModule() {
         if (!token) {
             btnOpenAuth.style.display = 'inline-flex';
             userProfileBadge.style.display = 'none';
+            showAuthModal();
             return;
         }
 
@@ -1198,6 +1199,7 @@ function initAuthModule() {
                 localStorage.removeItem('customer_seg_token');
                 btnOpenAuth.style.display = 'inline-flex';
                 userProfileBadge.style.display = 'none';
+                showAuthModal();
                 return;
             }
 
@@ -1205,8 +1207,13 @@ function initAuthModule() {
             btnOpenAuth.style.display = 'none';
             userNameDisplay.innerText = user.name;
             userProfileBadge.style.display = 'inline-flex';
+            hideAuthModal();
+            await checkDatasetStatus();
+            await loadDashboardData();
+            await loadRfmData();
         } catch (err) {
             console.error("Session verification error:", err);
+            showAuthModal();
         }
     }
 
