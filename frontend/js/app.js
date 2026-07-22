@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCampaignExport();
     initSimulatorTool();
     initAuthModule();
+    initPdfExporter();
 
     document.getElementById('btn-refresh').addEventListener('click', () => {
         checkDatasetStatus();
@@ -34,6 +35,15 @@ document.addEventListener('DOMContentLoaded', () => {
         alert("Downloading Customer Segmentation Report Data!");
     });
 });
+
+function initPdfExporter() {
+    const pdfBtn = document.getElementById('btn-export-pdf');
+    if (!pdfBtn) return;
+
+    pdfBtn.addEventListener('click', () => {
+        window.print();
+    });
+}
 
 
 /* Navigation Tab Switcher */
