@@ -28,25 +28,49 @@ def verify_password(password: str, hashed_password: str) -> bool:
     except Exception:
         return False
 
+from backend.api.db import get_db_connection, log_audit_event
+
 def load_users() -> dict:
-    if os.path.exists(USERS_FILE):
-        try:
-            with open(USERS_FILE, 'r') as f:
-                return json.load(f)
-        except Exception:
-            pass
-    if os.path.exists(BASE_USERS_FILE):
-        try:
-            with open(BASE_USERS_FILE, 'r') as f:
-                return json.load(f)
-        except Exception:
-            pass
-    return {}
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, name, email, password_hash, created_at FROM users")
+        rows = cursor.fetchall()
+        conn.close()
+        
+        users = {}
+        for r in rows:
+            users[r["email"]] = {
+                "id": r["id"],
+                "user_id": r["id"],
+                "name": r["name"],
+                "email": r["email"],
+                "password": r["password_hash"],
+                "password_hash": r["password_hash"],
+                "created_at": r["created_at"]
+            }
+        return users
+    except Exception as exc:
+        print("Failed to load users from DB:", exc)
+        return {}
+
+def save_user_to_db(user_id: str, name: str, email: str, password_hash: str):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    created_at = datetime.utcnow().isoformat()
+    cursor.execute(
+        "INSERT OR REPLACE INTO users (id, name, email, password_hash, created_at) VALUES (?, ?, ?, ?, ?)",
+        (user_id, name, email, password_hash, created_at)
+    )
+    conn.commit()
+    conn.close()
+    log_audit_event(user_id, "user_registered", {"email": email, "name": name})
 
 def save_users(users: dict):
-    os.makedirs(os.path.dirname(USERS_FILE), exist_ok=True)
-    with open(USERS_FILE, 'w') as f:
-        json.dump(users, f, indent=2)
+    for email, user in users.items():
+        uid = user.get("id") or user.get("user_id") or f"usr_{secrets.token_hex(6)}"
+        pwd = user.get("password_hash") or user.get("password") or ""
+        save_user_to_db(uid, user["name"], user["email"], pwd)
 
 def create_jwt_token(user_id: str, email: str, name: str) -> str:
     now = datetime.now(timezone.utc)

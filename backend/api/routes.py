@@ -714,3 +714,51 @@ def predict_customer_segment(customer_input: CustomerInputSchema):
         "pca_coordinates": pca_coord,
         "metrics_summary": target_persona['metrics']
     }
+
+class TransactionIngestSchema(BaseModel):
+    customer_id: str
+    recency_days: int
+    frequency_orders: int
+    monetary_spend: float
+
+@router.post("/ingest/transaction")
+def ingest_realtime_transaction(
+    payload: TransactionIngestSchema,
+    user: dict = Depends(get_current_user_optional)
+):
+    user_id = user["sub"] if user else None
+    
+    # Log transaction in SQL database
+    try:
+        from backend.api.db import get_db_connection, log_audit_event
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        tx_id = f"tx_{secrets.token_hex(6)}"
+        cursor.execute(
+            "INSERT INTO transactions (id, user_id, customer_id, recency_days, frequency_orders, monetary_spend, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (tx_id, user_id or "guest", payload.customer_id, payload.recency_days, payload.frequency_orders, payload.monetary_spend, datetime.utcnow().isoformat())
+        )
+        conn.commit()
+        conn.close()
+        log_audit_event(user_id, "transaction_ingested", {"customer_id": payload.customer_id, "monetary_spend": payload.monetary_spend})
+    except Exception as exc:
+        print("SQL transaction insert warning:", exc)
+
+    # Classify customer using ML engine
+    single_input = CustomerInputSchema(
+        Recency_Days=payload.recency_days,
+        Frequency_Orders=payload.frequency_orders,
+        Monetary_Spend=payload.monetary_spend
+    )
+    prediction = predict_customer_segment(single_input)
+    
+    return {
+        "status": "ingested",
+        "customer_id": payload.customer_id,
+        "segment": prediction["persona_title"],
+        "cluster_id": prediction["predicted_cluster"],
+        "predicted_ltv": prediction["predicted_ltv_12m"],
+        "churn_risk": prediction["churn_risk_index"],
+        "is_anomaly": prediction["is_anomaly"],
+        "recommended_action": prediction["recommended_strategy"]
+    }

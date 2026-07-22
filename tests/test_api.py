@@ -165,3 +165,17 @@ def test_api_analytics_ask_endpoint():
     data = response.json()
     assert "answer" in data
     assert "category" in data
+
+def test_api_ingest_transaction_endpoint():
+    payload = {
+        "customer_id": "CUST_TEST_100",
+        "recency_days": 5,
+        "frequency_orders": 25,
+        "monetary_spend": 2500.0
+    }
+    response = client.post("/api/ingest/transaction", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "ingested"
+    assert "segment" in data
+    assert "predicted_ltv" in data
