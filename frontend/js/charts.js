@@ -8,6 +8,7 @@ class DashboardCharts {
         this.pieChart = null;
         this.barChart = null;
         this.scatterChart = null;
+        this.elbowChart = null;
     }
 
     renderRevenuePieChart(canvasId, clusters) {
@@ -123,6 +124,74 @@ class DashboardCharts {
         });
     }
 
+    renderElbowSilhouetteChart(canvasId, gridData) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+
+        if (this.elbowChart) {
+            this.elbowChart.destroy();
+        }
+
+        const ks = gridData.map(g => `K=${g.k}`);
+        const inertias = gridData.map(g => g.inertia);
+        const silhouettes = gridData.map(g => g.silhouette_score);
+
+        this.elbowChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ks,
+                datasets: [
+                    {
+                        label: 'Inertia (Elbow Drop)',
+                        data: inertias,
+                        borderColor: '#3B82F6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.3,
+                        pointRadius: 6,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Silhouette Score (Peak Optimal)',
+                        data: silhouettes,
+                        borderColor: '#10B981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.3,
+                        pointRadius: 6,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        ticks: { color: '#94A3B8' },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                    },
+                    y: {
+                        type: 'linear',
+                        position: 'left',
+                        ticks: { color: '#3B82F6' },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        title: { display: true, text: 'Inertia', color: '#3B82F6' }
+                    },
+                    y1: {
+                        type: 'linear',
+                        position: 'right',
+                        ticks: { color: '#10B981' },
+                        grid: { drawOnChartArea: false },
+                        title: { display: true, text: 'Silhouette Score', color: '#10B981' }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: { color: '#94A3B8' }
+                    }
+                }
+            }
+        });
+    }
+
     renderPcaScatterChart(canvasId, points) {
         const ctx = document.getElementById(canvasId).getContext('2d');
 
@@ -130,7 +199,6 @@ class DashboardCharts {
             this.scatterChart.destroy();
         }
 
-        // Group points by cluster persona for separate legend items
         const clustersMap = {};
         points.forEach(p => {
             if (!clustersMap[p.persona]) {

@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
     loadDashboardData();
     initPredictorForm();
+    initAiQueryAssistant();
 
     document.getElementById('btn-refresh').addEventListener('click', () => {
         loadDashboardData();
@@ -16,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
         alert("Downloading Customer Segmentation Report Data!");
     });
 });
+
 
 /* Navigation Tab Switcher */
 function initNavigation() {
@@ -68,19 +70,28 @@ async function loadDashboardData() {
             window.dashboardCharts.renderRecencyMonetaryChart('recencyMonetaryChart', personasData.clusters);
         }
 
-        // 3. Fetch PCA Scatterplot Points
+        // 3. Fetch Elbow & Silhouette Grid Data
+        const elbowRes = await fetch('/api/analytics/elbow-silhouette');
+        if (elbowRes.ok) {
+            const elbowData = await elbowRes.json();
+            document.getElementById('badge-optimal-k').innerText = `Optimal K = ${elbowData.optimal_k}`;
+            window.dashboardCharts.renderElbowSilhouetteChart('elbowSilhouetteChart', elbowData.grid);
+        }
+
+        // 4. Fetch PCA Scatterplot Points
         const pcaRes = await fetch('/api/visualization/pca3d');
         if (pcaRes.ok) {
             const pcaData = await pcaRes.json();
             window.dashboardCharts.renderPcaScatterChart('pcaScatterChart', pcaData.points);
         }
 
-        // 4. Fetch Benchmark Table
+        // 5. Fetch Benchmark Table
         const benchRes = await fetch('/api/benchmark');
         if (benchRes.ok) {
             const benchData = await benchRes.json();
             renderBenchmarkTable(benchData);
         }
+
 
     } catch (err) {
         console.error("Error loading dashboard data:", err);
@@ -258,3 +269,81 @@ function renderPredictionResult(pred, resultCard) {
         </div>
     `;
 }
+
+function initAiQueryAssistant() {
+    const input = document.getElementById('ai-query-input');
+    const btn = document.getElementById('btn-ai-query');
+    const chips = document.querySelectorAll('.chip');
+    const responseBox = document.getElementById('ai-response-container');
+
+    const submitQuery = async (queryText) => {
+        if (!queryText.trim()) return;
+
+        responseBox.style.display = 'block';
+        responseBox.innerHTML = `
+            <div class="ai-response-header">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <h4>Analyzing Customer Data & Segment Models...</h4>
+            </div>
+        `;
+
+        try {
+            const res = await fetch('/api/analytics/ask', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: queryText })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                renderAiQueryResponse(data, responseBox);
+            } else {
+                responseBox.innerHTML = `<p style="color:#EF4444;">Error processing query. Please check engine status.</p>`;
+            }
+        } catch (err) {
+            console.error("AI Query Error:", err);
+        }
+    };
+
+    btn.addEventListener('click', () => submitQuery(input.value));
+
+    input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') submitQuery(input.value);
+    });
+
+    chips.forEach(chip => {
+        chip.addEventListener('click', () => {
+            const q = chip.getAttribute('data-q');
+            input.value = q;
+            submitQuery(q);
+        });
+    });
+}
+
+/* Render AI Query Assistant Response */
+function renderAiQueryResponse(data, container) {
+    let statsHtml = '';
+    if (data.key_stats) {
+        statsHtml = '<div class="ai-stats-row">';
+        for (const [k, v] of Object.entries(data.key_stats)) {
+            const label = k.replace(/_/g, ' ').toUpperCase();
+            statsHtml += `<div class="ai-stat-item"><span>${label}:</span> <strong>${v}</strong></div>`;
+        }
+        statsHtml += '</div>';
+    }
+
+    container.innerHTML = `
+        <div class="ai-response-header">
+            <i class="fa-solid fa-robot"></i>
+            <h4>${data.category} Analysis Report</h4>
+        </div>
+        <div class="ai-response-body">
+            <p>${data.answer}</p>
+            ${statsHtml}
+            <div class="persona-strategy" style="margin-top:10px;">
+                <strong>Strategic Recommendation:</strong> ${data.recommended_action}
+            </div>
+        </div>
+    `;
+}
+

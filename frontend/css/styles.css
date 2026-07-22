@@ -686,11 +686,115 @@ body.dark-theme {
     color: #FFF;
 }
 
-/* Responsive */
-@media (max-width: 1024px) {
-    .sidebar { width: 80px; padding: 16px 8px; }
-    .brand-text, .nav-item span, .status-info { display: none; }
-    .main-content { margin-left: 80px; }
-    .grid-2col { grid-template-columns: 1fr; }
-    .dashboard-grid { grid-template-columns: 1fr; }
+/* Full Width Card */
+.full-width-card {
+    grid-column: 1 / -1;
 }
+
+.flex-between {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* AI Query Assistant Box */
+.ai-query-box {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.query-input-wrap {
+    display: flex;
+    gap: 12px;
+}
+
+.query-input-wrap input {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border-accent);
+    border-radius: var(--radius-md);
+    padding: 14px 18px;
+    color: var(--text-main);
+    font-size: 15px;
+    font-family: var(--font-sans);
+    outline: none;
+    transition: var(--transition);
+}
+
+.query-input-wrap input:focus {
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 16px rgba(59, 130, 246, 0.35);
+}
+
+.suggested-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.chip {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-card);
+    border-radius: 20px;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: var(--transition);
+}
+
+.chip:hover {
+    background: rgba(59, 130, 246, 0.2);
+    color: #FFF;
+    border-color: var(--primary-blue);
+}
+
+.ai-response-box {
+    background: rgba(15, 23, 42, 0.85);
+    border-left: 4px solid var(--primary-emerald);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    animation: fadeIn 0.35s ease-in-out;
+}
+
+.ai-response-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.ai-response-header h4 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--primary-emerald);
+}
+
+.ai-response-body p {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-main);
+    margin-bottom: 14px;
+}
+
+.ai-stats-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 12px;
+}
+
+.ai-stat-item {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.ai-stat-item strong {
+    color: var(--text-main);
+}
+

@@ -110,8 +110,31 @@
                     </div>
                 </div>
 
+                <!-- Analytics AI Assistant Section -->
+                <div class="glass-card full-width-card" style="margin-top: 24px;">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-comments-dollar"></i> Customer Data Intelligence Assistant</h2>
+                        <p class="card-sub">Ask any natural language question about customer churn, top spenders, silhouette scores, or marketing playbooks.</p>
+                    </div>
+                    <div class="ai-query-box">
+                        <div class="query-input-wrap">
+                            <input type="text" id="ai-query-input" placeholder="e.g. Which segment has the highest churn risk? or What is the best clustering model?" autocomplete="off">
+                            <button class="btn btn-primary" id="btn-ai-query"><i class="fa-solid fa-paper-plane"></i> Ask Assistant</button>
+                        </div>
+                        <div class="suggested-chips">
+                            <span class="chip" data-q="Which cluster has the highest churn risk?">⚠️ Highest Churn Risk</span>
+                            <span class="chip" data-q="Which segment generates the highest revenue?">🌟 Top Revenue Segment</span>
+                            <span class="chip" data-q="Which algorithm has the best silhouette score?">📈 Best Model Score</span>
+                            <span class="chip" data-q="Why did DBSCAN flag noise points?">🚨 DBSCAN Outliers</span>
+                        </div>
+                        <div id="ai-response-container" class="ai-response-box" style="display:none;">
+                            <!-- Response rendered dynamically -->
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Charts Section -->
-                <div class="dashboard-grid">
+                <div class="dashboard-grid" style="margin-top: 24px;">
                     <div class="glass-card chart-card">
                         <div class="card-header">
                             <h3><i class="fa-solid fa-chart-pie"></i> Revenue Share by Persona Segment</h3>
@@ -130,7 +153,22 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Elbow Method & Silhouette Curves Section -->
+                <div class="glass-card chart-card full-width-card" style="margin-top: 24px;">
+                    <div class="card-header flex-between">
+                        <div>
+                            <h2><i class="fa-solid fa-chart-line"></i> K-Means Elbow Method & Silhouette Score Search Curve</h2>
+                            <p class="card-sub">Inertia drop (Elbow) & Silhouette score optimization across K=2 to K=9</p>
+                        </div>
+                        <span class="pill-badge active" id="badge-optimal-k">Optimal K = 4</span>
+                    </div>
+                    <div class="chart-wrapper-large">
+                        <canvas id="elbowSilhouetteChart"></canvas>
+                    </div>
+                </div>
             </section>
+
 
             <!-- TAB 2: CUSTOMER PERSONAS -->
             <section id="tab-personas" class="tab-content">

@@ -1,10 +1,10 @@
 import numpy as np
 from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_score, calinski_harabasz_score, davies_bouldin_score
+from sklearn.metrics import silhouette_score, silhouette_samples, calinski_harabasz_score, davies_bouldin_score
 
 class KMeansSegmentationModel:
     """
-    K-Means Clustering implementation with optimal K grid search.
+    K-Means Clustering implementation with optimal K grid search and silhouette sample analysis.
     """
     def __init__(self, n_clusters: int = 5, random_state: int = 42):
         self.n_clusters = n_clusters
@@ -15,7 +15,7 @@ class KMeansSegmentationModel:
 
     def find_optimal_k(self, X: np.ndarray, k_range: range = range(2, 11)) -> dict:
         """
-        Evaluates K values from k_range and returns inertia and silhouette scores.
+        Evaluates K values from k_range and returns inertia, silhouette scores, DB index, and CH index.
         """
         results = []
         best_k = self.n_clusters
@@ -24,17 +24,17 @@ class KMeansSegmentationModel:
         for k in k_range:
             km = KMeans(n_clusters=k, random_state=self.random_state, n_init=10)
             labels = km.fit_predict(X)
-            inertia = km.inertia_
-            sil = silhouette_score(X, labels)
-            db = davies_bouldin_score(X, labels)
-            ch = calinski_harabasz_score(X, labels)
+            inertia = float(km.inertia_)
+            sil = float(silhouette_score(X, labels))
+            db = float(davies_bouldin_score(X, labels))
+            ch = float(calinski_harabasz_score(X, labels))
             
             results.append({
-                'k': k,
-                'inertia': float(inertia),
-                'silhouette_score': float(sil),
-                'davies_bouldin': float(db),
-                'calinski_harabasz': float(ch)
+                'k': int(k),
+                'inertia': round(inertia, 2),
+                'silhouette_score': round(sil, 4),
+                'davies_bouldin': round(db, 4),
+                'calinski_harabasz': round(ch, 2)
             })
             
             if sil > best_silhouette:
@@ -42,9 +42,30 @@ class KMeansSegmentationModel:
                 best_k = k
 
         return {
-            'best_k': best_k,
-            'best_silhouette': best_silhouette,
+            'best_k': int(best_k),
+            'best_silhouette': round(best_silhouette, 4),
             'grid_search': results
+        }
+
+    def compute_silhouette_samples_data(self, X: np.ndarray) -> dict:
+        """
+        Computes silhouette coefficients per sample for visual silhouette plots.
+        """
+        if self.labels_ is None:
+            self.fit(X)
+            
+        sample_sil_values = silhouette_samples(X, self.labels_)
+        avg_sil = float(silhouette_score(X, self.labels_))
+        
+        cluster_silhouettes = {}
+        for c in range(self.n_clusters):
+            c_vals = sample_sil_values[self.labels_ == c]
+            c_vals.sort()
+            cluster_silhouettes[int(c)] = [round(float(v), 4) for v in c_vals[::max(1, len(c_vals)//100)]] # Sample 100 points
+            
+        return {
+            'average_silhouette': round(avg_sil, 4),
+            'cluster_silhouettes': cluster_silhouettes
         }
 
     def fit(self, X: np.ndarray):

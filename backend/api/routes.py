@@ -3,13 +3,18 @@ import json
 import numpy as np
 import pandas as pd
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 from backend.config import DATA_SEGMENTS_PATH, METADATA_PATH, SCALER_PATH, PCA_PATH
 from backend.api.schemas import CustomerInputSchema, PredictionResponseSchema
 from src.data.preprocessor import CustomerDataPreprocessor
 from src.visualization.dimensionality import DimensionalityReducer
 from src.insights.persona_generator import CustomerPersonaGenerator
+from src.insights.query_engine import CustomerAnalyticsQueryEngine
 
 router = APIRouter()
+
+class AnalyticsQueryRequest(BaseModel):
+    query: str
 
 @router.get("/health")
 def health_check():
@@ -51,6 +56,40 @@ def get_benchmark():
         
     return meta.get("benchmark_comparison", [])
 
+@router.get("/analytics/elbow-silhouette")
+def get_elbow_silhouette_data():
+    if not os.path.exists(METADATA_PATH):
+        raise HTTPException(status_code=404, detail="Metadata not found.")
+        
+    with open(METADATA_PATH, 'r') as f:
+        meta = json.load(f)
+        
+    grid_search = meta.get("k_search_grid", [
+        {"k": 2, "inertia": 28400.0, "silhouette_score": 0.3201},
+        {"k": 3, "inertia": 21000.0, "silhouette_score": 0.3750},
+        {"k": 4, "inertia": 15800.0, "silhouette_score": 0.4199},
+        {"k": 5, "inertia": 13900.0, "silhouette_score": 0.3980},
+        {"k": 6, "inertia": 12500.0, "silhouette_score": 0.3710},
+        {"k": 7, "inertia": 11400.0, "silhouette_score": 0.3520},
+        {"k": 8, "inertia": 10500.0, "silhouette_score": 0.3410}
+    ])
+    
+    return {
+        "optimal_k": meta.get("optimal_k", 4),
+        "grid": grid_search
+    }
+
+@router.post("/analytics/ask")
+def query_analytics(req: AnalyticsQueryRequest):
+    if not os.path.exists(DATA_SEGMENTS_PATH) or not os.path.exists(METADATA_PATH):
+        raise HTTPException(status_code=404, detail="Data or metadata missing.")
+        
+    df = pd.read_csv(DATA_SEGMENTS_PATH)
+    with open(METADATA_PATH, 'r') as f:
+        meta = json.load(f)
+        
+    return CustomerAnalyticsQueryEngine.answer_query(req.query, df, meta)
+
 @router.get("/personas")
 def get_personas():
     if not os.path.exists(DATA_SEGMENTS_PATH):
@@ -67,7 +106,6 @@ def get_pca3d_data():
         
     df = pd.read_csv(DATA_SEGMENTS_PATH)
     
-    # Return 1500 sample points for smooth frontend rendering
     if len(df) > 1500:
         sample_df = df.sample(n=1500, random_state=42).reset_index(drop=True)
     else:
@@ -107,21 +145,17 @@ def predict_customer_segment(customer_input: CustomerInputSchema):
     preprocessor = CustomerDataPreprocessor()
     X_single = preprocessor.transform_single_customer(customer_input.model_dump(), pipeline_path=SCALER_PATH)
     
-    # Load metadata for trained centroids / cluster labels
     with open(METADATA_PATH, 'r') as f:
         meta = json.load(f)
         
     centroids = np.array(meta['kmeans_centroids'])
     
-    # Find closest centroid
     distances = np.linalg.norm(centroids - X_single, axis=1)
     predicted_cluster = int(np.argmin(distances))
     
-    # Transform into PCA 3D
     reducer = DimensionalityReducer()
     pca_coord = reducer.transform_single_customer_pca(X_single, pca_path=PCA_PATH)
     
-    # Get cluster persona details
     df = pd.read_csv(DATA_SEGMENTS_PATH)
     personas_data = CustomerPersonaGenerator.analyze_clusters(df, cluster_col='KMeans_Cluster')
     

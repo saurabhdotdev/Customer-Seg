@@ -105,11 +105,13 @@ def run_pipeline():
     metadata = {
         'total_samples': len(df_processed),
         'optimal_k': int(optimal_k),
+        'k_search_grid': k_search['grid_search'],
         'kmeans_centroids': kmeans.cluster_centers_.tolist(),
         'pca_metadata': pca_meta,
         'benchmark_comparison': df_benchmark.to_dict(orient='records'),
         'persona_summary': personas_data
     }
+
     
     os.makedirs(os.path.dirname(METADATA_PATH), exist_ok=True)
     with open(METADATA_PATH, 'w') as f:
