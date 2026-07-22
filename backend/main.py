@@ -30,7 +30,13 @@ if os.path.exists(FRONTEND_DIR):
     app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 
 @app.get("/")
-def serve_index():
+@app.get("/{page_name:path}")
+def serve_index(page_name: str = ""):
+    if page_name:
+        file_path = os.path.join(FRONTEND_DIR, page_name)
+        if os.path.exists(file_path) and os.path.isfile(file_path):
+            return FileResponse(file_path)
+            
     index_path = os.path.join(FRONTEND_DIR, "index.html")
     if os.path.exists(index_path):
         return FileResponse(index_path)

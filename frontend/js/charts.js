@@ -261,6 +261,130 @@ class DashboardCharts {
             }
         });
     }
+
+    renderPlotly3dPcaPlot(containerId, points) {
+        const container = document.getElementById(containerId);
+        if (!container || !window.Plotly) return;
+
+        const clustersMap = {};
+        points.forEach(p => {
+            if (!clustersMap[p.persona]) {
+                clustersMap[p.persona] = {
+                    name: p.persona,
+                    color: p.color,
+                    x: [],
+                    y: [],
+                    z: [],
+                    text: []
+                };
+            }
+            clustersMap[p.persona].x.push(p.x);
+            clustersMap[p.persona].y.push(p.y);
+            clustersMap[p.persona].z.push(p.z);
+            clustersMap[p.persona].text.push(
+                `<b>${p.id}</b> (${p.persona})<br>` +
+                `Monetary Spend: $${p.spend.toLocaleString()}<br>` +
+                `Frequency: ${p.freq} orders<br>` +
+                `Recency: ${p.recency} days<br>` +
+                `Churn Risk: ${(p.churn * 100).toFixed(1)}%`
+            );
+        });
+
+        const data = Object.values(clustersMap).map(c => ({
+            type: 'scatter3d',
+            mode: 'markers',
+            name: c.name,
+            x: c.x,
+            y: c.y,
+            z: c.z,
+            hoverinfo: 'text',
+            hovertext: c.text,
+            marker: {
+                size: 4,
+                color: c.color,
+                opacity: 0.85,
+                line: { width: 0.5, color: '#ffffff' }
+            }
+        }));
+
+        const layout = {
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            margin: { l: 0, r: 0, b: 0, t: 0 },
+            legend: {
+                font: { family: 'Plus Jakarta Sans', color: '#94A3B8', size: 12 },
+                bgcolor: 'rgba(15, 23, 42, 0.6)',
+                bordercolor: 'rgba(255, 255, 255, 0.1)',
+                borderwidth: 1
+            },
+            scene: {
+                xaxis: { title: 'PCA 1', color: '#94A3B8', gridcolor: 'rgba(255,255,255,0.08)', zerolinecolor: 'rgba(255,255,255,0.15)' },
+                yaxis: { title: 'PCA 2', color: '#94A3B8', gridcolor: 'rgba(255,255,255,0.08)', zerolinecolor: 'rgba(255,255,255,0.15)' },
+                zaxis: { title: 'PCA 3', color: '#94A3B8', gridcolor: 'rgba(255,255,255,0.08)', zerolinecolor: 'rgba(255,255,255,0.15)' },
+                bgcolor: 'rgba(0, 0, 0, 0)'
+            }
+        };
+
+        Plotly.newPlot(containerId, data, layout, { responsive: true, displayModeBar: true, displaylogo: false });
+    }
+
+    renderCohortRetentionChart(canvasId, cohortData) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+
+        if (this.cohortChart) {
+            this.cohortChart.destroy();
+        }
+
+        const months = cohortData.months;
+        const datasets = cohortData.cohorts.map(c => ({
+            label: `${c.persona_title} (M12: ${c.m12_retention}%)`,
+            data: c.retention_curve,
+            borderColor: c.color,
+            backgroundColor: `${c.color}15`,
+            tension: 0.35,
+            pointRadius: 4,
+            pointHoverRadius: 7,
+            borderWidth: 2.5
+        }));
+
+        this.cohortChart = new Chart(ctx, {
+            type: 'line',
+            data: { labels: months, datasets: datasets },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        ticks: { color: '#94A3B8' },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        title: { display: true, text: 'Months Since Onboarding', color: '#94A3B8' }
+                    },
+                    y: {
+                        ticks: { color: '#94A3B8' },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        title: { display: true, text: 'Active Retention Rate (%)', color: '#94A3B8' },
+                        min: 0,
+                        max: 100
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { color: '#94A3B8', font: { family: 'Plus Jakarta Sans', size: 12 } }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return ` ${context.dataset.label.split(' (')[0]}: ${context.raw}% active retention`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
 }
 
 window.dashboardCharts = new DashboardCharts();

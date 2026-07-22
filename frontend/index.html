@@ -18,12 +18,18 @@
     <!-- App Container -->
     <div class="app-layout">
         <!-- Sidebar Navigation -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
             <div class="brand">
-                <div class="brand-icon"><i class="fa-solid fa-chart-pie"></i></div>
-                <div class="brand-text">
-                    <h2>SegEngine<span class="badge-ai">PRO</span></h2>
-                    <p>Customer Intelligence ML</p>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div class="brand-icon"><i class="fa-solid fa-chart-pie"></i></div>
+                    <div class="brand-text">
+                        <h2>SegEngine<span class="badge-ai">PRO</span></h2>
+                        <p>Customer Intelligence ML</p>
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <button class="sidebar-collapse-btn" id="sidebar-collapse-btn" title="Collapse Sidebar (Full Screen)"><i class="fa-solid fa-chevron-left"></i></button>
+                    <button class="nav-close-btn" id="nav-close-btn" aria-label="Close Menu"><i class="fa-solid fa-xmark"></i></button>
                 </div>
             </div>
 
@@ -31,8 +37,20 @@
                 <a href="#overview" class="nav-item active" data-tab="tab-overview">
                     <i class="fa-solid fa-gauge-high"></i> <span>Executive Overview</span>
                 </a>
+                <a href="#data" class="nav-item" data-tab="tab-data">
+                    <i class="fa-solid fa-database"></i> <span>Data Studio</span>
+                </a>
                 <a href="#personas" class="nav-item" data-tab="tab-personas">
                     <i class="fa-solid fa-user-group"></i> <span>Customer Personas</span>
+                </a>
+                <a href="#rfm" class="nav-item" data-tab="tab-rfm">
+                    <i class="fa-solid fa-table-cells-large"></i> <span>RFM Quintile Matrix</span>
+                </a>
+                <a href="#actions" class="nav-item" data-tab="tab-actions">
+                    <i class="fa-solid fa-bullhorn"></i> <span>Campaign Actions</span>
+                </a>
+                <a href="#testing" class="nav-item" data-tab="tab-testing">
+                    <i class="fa-solid fa-vial-circle-check"></i> <span>How It Works & Sandbox</span>
                 </a>
                 <a href="#clusters" class="nav-item" data-tab="tab-clusters">
                     <i class="fa-solid fa-cubes-stacked"></i> <span>PCA 3D Visualization</span>
@@ -60,15 +78,42 @@
         <main class="main-content">
             <!-- Header Bar -->
             <header class="top-header">
-                <div class="header-title">
-                    <h1 id="page-title">Executive Overview</h1>
-                    <p class="subtitle">Multi-Algorithm Customer Segmentation & Behavioral Intelligence Platform</p>
+                <div style="display:flex; align-items:center; gap:14px; width:100%;">
+                    <button class="nav-toggle-btn" id="nav-toggle-btn" aria-label="Toggle Sidebar Menu"><i class="fa-solid fa-bars"></i> <span>Menu</span></button>
+                    <div class="header-title">
+                        <h1 id="page-title">Executive Overview</h1>
+                        <p class="subtitle">Multi-Algorithm Customer Segmentation & Behavioral Intelligence Platform</p>
+                    </div>
                 </div>
                 <div class="header-actions">
+                    <div class="currency-selector-wrap">
+                        <i class="fa-solid fa-coins"></i>
+                        <select id="currency-select" class="currency-select">
+                            <option value="USD">USD ($)</option>
+                            <option value="EUR">EUR (€)</option>
+                            <option value="GBP">GBP (£)</option>
+                            <option value="INR">INR (₹)</option>
+                            <option value="AED">AED (AED)</option>
+                        </select>
+                    </div>
                     <button class="btn btn-secondary" id="btn-refresh"><i class="fa-solid fa-rotate"></i> Refresh Data</button>
                     <button class="btn btn-primary" id="btn-export"><i class="fa-solid fa-download"></i> Export Segment Data</button>
                 </div>
             </header>
+
+            <!-- Active Dataset Status & Isolation Control Bar -->
+            <div id="dataset-status-bar" style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 10px; padding: 12px 18px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <span style="width:10px; height:10px; border-radius:50%; background:#10B981; display:inline-block;" id="active-dataset-dot"></span>
+                    <span style="font-size:13px; color:var(--text-muted); font-weight:600;">Active Dataset:</span>
+                    <strong style="font-size:13.5px; color:#FFF;" id="active-dataset-name">Demo Dataset (50,000 Customers)</strong>
+                    <span class="pill-badge" id="active-dataset-badge" style="font-size:11px; background:rgba(59,130,246,0.15); color:#60A5FA; border:1px solid rgba(59,130,246,0.3);">Baseline Demo</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <a href="#data" class="btn btn-secondary nav-item" data-tab="tab-data" style="font-size:12px; padding:7px 14px; text-decoration:none;"><i class="fa-solid fa-cloud-arrow-up" style="color:#06B6D4;"></i> Upload Custom CSV</a>
+                    <button class="btn btn-secondary" id="btn-reset-dataset" style="font-size:12px; padding:7px 14px; display:none; background:rgba(239,68,68,0.12); border-color:rgba(239,68,68,0.3); color:#F87171;"><i class="fa-solid fa-rotate-left"></i> Reset to Demo Data</button>
+                </div>
+            </div>
 
             <!-- TAB 1: EXECUTIVE OVERVIEW -->
             <section id="tab-overview" class="tab-content active">
@@ -169,6 +214,68 @@
                 </div>
             </section>
 
+            <!-- TAB: DATA STUDIO -->
+            <section id="tab-data" class="tab-content">
+                <div class="grid-2col">
+                    <div class="glass-card">
+                        <div class="card-header">
+                            <h2><i class="fa-solid fa-cloud-arrow-up"></i> Upload Customer Dataset</h2>
+                            <p class="card-sub">Upload CSV dataset to retrain segmentation models & personas.</p>
+                        </div>
+                        <form id="upload-form">
+                            <div class="form-group" style="margin-bottom:16px;">
+                                <label>Select Customer CSV File</label>
+                                <input type="file" id="csv-file-input" accept=".csv" required style="padding:10px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); border-radius:8px; width:100%; color:#FFF;">
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block"><i class="fa-solid fa-gears"></i> Process & Retrain Models</button>
+                        </form>
+                    </div>
+
+                    <div class="glass-card">
+                        <div class="card-header">
+                            <h2><i class="fa-solid fa-table-list"></i> Dataset Schema & Requirements</h2>
+                            <p class="card-sub">Columns automatically mapped by preprocessor</p>
+                        </div>
+                        <div id="schema-container"></div>
+                    </div>
+                </div>
+
+                <!-- Micro-Segment Cohort Explorer -->
+                <div class="glass-card" style="margin-top:24px;">
+                    <div class="card-header flex-between">
+                        <div>
+                            <h2><i class="fa-solid fa-filter"></i> Micro-Segment Cohort Explorer</h2>
+                            <p class="card-sub">Filter 50,000 customers by persona cluster, churn risk threshold, min spend, or recency.</p>
+                        </div>
+                        <button type="button" class="btn btn-secondary" id="btn-export-filtered-csv"><i class="fa-solid fa-file-csv"></i> Export Cohort CSV</button>
+                    </div>
+                    <div class="form-grid" style="margin-bottom:16px;">
+                        <div class="form-group">
+                            <label>Persona Cluster</label>
+                            <select id="filter-persona" style="background:rgba(0,0,0,0.45); border:1px solid var(--border-card); border-radius:8px; color:#FFF; padding:10px; height:52px; font-size:15px;">
+                                <option value="ALL">All Personas (All Clusters)</option>
+                                <option value="0">Cluster 0 - VIP High Value</option>
+                                <option value="1">Cluster 1 - At-Risk Lapsed</option>
+                                <option value="2">Cluster 2 - Bargain Hunters</option>
+                                <option value="3">Cluster 3 - Frequent Shoppers</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Max Churn Risk (%)</label>
+                            <input type="number" id="filter-churn" value="100" min="0" max="100" step="any">
+                        </div>
+                        <div class="form-group">
+                            <label>Min Annual Spend ($)</label>
+                            <input type="number" id="filter-min-spend" value="0" min="0" step="any">
+                        </div>
+                        <div class="form-group">
+                            <label>Max Recency (Days)</label>
+                            <input type="number" id="filter-recency" value="365" min="0" step="any">
+                        </div>
+                    </div>
+                    <div id="filtered-stats-summary" style="font-size:15px; font-weight:700; color:var(--primary-blue); margin-top:12px;">Showing 50,000 customers matching filter criteria</div>
+                </div>
+            </section>
 
             <!-- TAB 2: CUSTOMER PERSONAS -->
             <section id="tab-personas" class="tab-content">
@@ -181,22 +288,254 @@
                 </div>
             </section>
 
+            <!-- TAB: CAMPAIGN ACTIONS -->
+            <section id="tab-actions" class="tab-content">
+                <div class="glass-card" style="margin-bottom:24px;">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-bullhorn"></i> Segment Campaign Playbooks</h2>
+                        <p class="card-sub">Machine-recommended marketing campaigns tailored per segment persona.</p>
+                    </div>
+                    <div id="campaigns-container" class="grid-2col"></div>
+                </div>
+
+                <div class="glass-card">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-wand-magic-sparkles"></i> Gemini AI Campaign Content Studio</h2>
+                        <p class="card-sub">Generate tailored Email, SMS & Digital Ad copy instantly</p>
+                    </div>
+                    <form id="campaign-copy-form" style="margin-bottom:20px;">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Select Target Segment</label>
+                                <select id="copy-persona-key" style="padding:10px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:#FFF; width:100%;">
+                                    <option value="CHAMPION">VIP Champions</option>
+                                    <option value="LOYALIST">Steady Loyalists</option>
+                                    <option value="NEW_BUYER">New Potential Loyalists</option>
+                                    <option value="BARGAIN">Bargain Hunters</option>
+                                    <option value="AT_RISK">At-Risk / Hibernating</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Campaign Objective</label>
+                                <input type="text" id="copy-objective" value="Re-engage lapsed buyers with exclusive discount voucher" required style="padding:10px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:#FFF; width:100%;">
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:12px; margin-top:12px;">
+                            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-sparkles"></i> Generate AI Campaign Copy</button>
+                            <button type="button" class="btn btn-secondary" id="btn-export-campaign-pdf" style="display:none;"><i class="fa-solid fa-file-pdf"></i> Download PDF Package</button>
+                            <button type="button" class="btn btn-secondary" id="btn-export-campaign-txt" style="display:none;"><i class="fa-solid fa-file-lines"></i> Copy Text Output</button>
+                        </div>
+                    </form>
+                    <div id="copy-result-container"></div>
+                </div>
+            </section>
+
+            <!-- TAB: RFM QUINTILE MATRIX & ANALYTICS -->
+            <section id="tab-rfm" class="tab-content">
+                <div class="glass-card" style="margin-bottom:24px;">
+                    <div class="card-header flex-between">
+                        <div>
+                            <h2><i class="fa-solid fa-table-cells-large"></i> Customer Health & Behavioral Matrix (RFM 5x5 Grid)</h2>
+                            <p class="card-sub">Easily understand your customer base by purchase recency (how recently they bought) and frequency (how often they buy).</p>
+                        </div>
+                        <span class="pill-badge active">50,000 Customers Mapped</span>
+                    </div>
+
+                    <!-- Quick Legend & How to Read Bar -->
+                    <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; font-size: 13px;">
+                        <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                            <span style="color:var(--text-muted); font-weight:600;"><i class="fa-solid fa-circle-info" style="color:var(--primary-blue);"></i> How to read each box:</span>
+                            <span style="color:#FFF;"><strong style="color:#FFF;">1,234</strong> = Customer Count</span>
+                            <span style="color:#10B981;"><strong style="color:#10B981;">$9,500</strong> = Avg Spend</span>
+                        </div>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap; font-size:11px;">
+                            <span style="background:rgba(16,185,129,0.15); border:1px solid #10B981; color:#10B981; padding:3px 8px; border-radius:4px;">👑 VIP Champions</span>
+                            <span style="background:rgba(6,182,212,0.15); border:1px solid #06B6D4; color:#06B6D4; padding:3px 8px; border-radius:4px;">🆕 New Buyers</span>
+                            <span style="background:rgba(59,130,246,0.15); border:1px solid #3B82F6; color:#60A5FA; padding:3px 8px; border-radius:4px;">⚡ Regulars</span>
+                            <span style="background:rgba(239,68,68,0.15); border:1px solid #EF4444; color:#F87171; padding:3px 8px; border-radius:4px;">🚨 At Risk!</span>
+                            <span style="background:rgba(100,116,139,0.15); border:1px solid #64748B; color:#94A3B8; padding:3px 8px; border-radius:4px;">💤 Hibernating</span>
+                        </div>
+                    </div>
+
+                    <!-- Main Grid + Summary Container -->
+                    <div style="display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; align-items: start;">
+                        
+                        <!-- Left Main Column: 5x5 Heatmap Matrix -->
+                        <div style="background:rgba(0,0,0,0.3); border:1px solid var(--border-card); border-radius:12px; padding:20px; min-width:0; overflow:hidden;">
+                            
+                            <!-- Top Axis Header: FREQUENCY -->
+                            <div style="margin-left:58px; margin-bottom:10px;">
+                                <div style="text-align:center; font-size:11px; font-weight:700; color:var(--primary-blue); letter-spacing:1px; text-transform:uppercase; margin-bottom:6px;">
+                                    FREQUENCY ➔ (How Often They Buy)
+                                </div>
+                                <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:8px; text-align:center; font-size:10.5px; color:var(--text-muted); font-weight:600;">
+                                    <span>F1 (1-Time)</span>
+                                    <span>F2 (Occasional)</span>
+                                    <span>F3 (Regular)</span>
+                                    <span>F4 (Frequent)</span>
+                                    <span>F5 (Repeat)</span>
+                                </div>
+                            </div>
+
+                            <!-- Grid layout with vertical RECENCY axis -->
+                            <div style="display:flex; gap:8px; align-items:stretch;">
+                                <!-- Left Axis Header: RECENCY -->
+                                <div style="width:50px; flex-shrink:0; display:flex; flex-direction:column; justify-content:space-around; text-align:center;">
+                                    <div style="font-size:10px; color:var(--text-muted); line-height:1.2; font-weight:600;">R5<br><span style="font-size:8.5px; color:#10B981;">(Recent)</span></div>
+                                    <div style="font-size:10px; color:var(--text-muted); line-height:1.2; font-weight:600;">R4</div>
+                                    <div style="font-size:10px; color:var(--text-muted); line-height:1.2; font-weight:600;">R3</div>
+                                    <div style="font-size:10px; color:var(--text-muted); line-height:1.2; font-weight:600;">R2</div>
+                                    <div style="font-size:10px; color:var(--text-muted); line-height:1.2; font-weight:600;">R1<br><span style="font-size:8.5px; color:#EF4444;">(Long Ago)</span></div>
+                                </div>
+
+                                <!-- Heatmap Matrix -->
+                                <div id="rfm-heatmap-container" style="flex:1; min-width:0; display:grid; grid-template-columns:repeat(5, 1fr); gap:8px;"></div>
+                            </div>
+
+                            <!-- Interactive Inspector / Action Drawer -->
+                            <div id="rfm-cell-inspector" style="margin-top:16px; background:rgba(15, 23, 42, 0.9); border:1px solid rgba(59, 130, 246, 0.3); border-radius:10px; padding:14px 16px; display:flex; align-items:center; gap:14px;">
+                                <div style="font-size:26px;" id="rfm-inspector-icon">💡</div>
+                                <div style="min-width:0; flex:1;">
+                                    <h4 id="rfm-inspector-title" style="font-size:14px; color:#FFF; margin:0 0 3px 0;">Hover or click any box above to inspect details</h4>
+                                    <p id="rfm-inspector-desc" style="font-size:12px; color:var(--text-muted); margin:0 0 4px 0;">See the exact customer segment description, average customer spend, and recommended marketing actions.</p>
+                                    <div id="rfm-inspector-action" style="font-size:12px; font-weight:600; color:#10B981; display:none;"></div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Right Summary Column: Customer Group Breakdown -->
+                        <div style="background:rgba(0,0,0,0.3); border:1px solid var(--border-card); border-radius:12px; padding:20px; height:100%; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
+                            <div>
+                                <h3 style="font-size:15px; margin-bottom:4px; color:var(--text-main);">Customer Group Summary</h3>
+                                <p style="font-size:11.5px; color:var(--text-muted); margin-bottom:14px;">Breakdown of your total customer base across simplified behavioral cohorts.</p>
+                                <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:8px; font-size:12px;" id="rfm-cohort-list"></ul>
+                            </div>
+                            <div style="margin-top:16px; background:rgba(59, 130, 246, 0.08); border:1px dashed rgba(59, 130, 246, 0.3); border-radius:8px; padding:10px 12px; font-size:11.5px; color:var(--text-muted);">
+                                <strong style="color:var(--primary-blue); display:block; margin-bottom:3px;"><i class="fa-solid fa-lightbulb"></i> Business Tip:</strong>
+                                Focus marketing budget on saving <strong>🚨 At-Risk</strong> big spenders (R1/F5 & R2/F5) before they leave completely.
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: HOW IT WORKS & INTERACTIVE SANDBOX -->
+            <section id="tab-testing" class="tab-content">
+                <div class="glass-card" style="margin-bottom: 24px;">
+                    <div class="card-header flex-between">
+                        <div>
+                            <h2><i class="fa-solid fa-flask"></i> Interactive ML Pipeline Sandbox & Explanation Studio</h2>
+                            <p class="card-sub">Test 1-click customer scenarios or enter custom stats to see how raw data flows into ML predictions.</p>
+                        </div>
+                        <span class="pill-badge active">Live Pipeline Simulator</span>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display:block; font-size:12px; font-weight:700; color:var(--text-muted); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px;">Quick Test 1-Click Shopper Scenarios:</label>
+                        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                            <button type="button" class="btn btn-secondary btn-sandbox-preset" data-preset="champion"><i class="fa-solid fa-crown" style="color:#10B981;"></i> VIP Luxury Shopper</button>
+                            <button type="button" class="btn btn-secondary btn-sandbox-preset" data-preset="bargain"><i class="fa-solid fa-tags" style="color:#F59E0B;"></i> Bargain Hunter</button>
+                            <button type="button" class="btn btn-secondary btn-sandbox-preset" data-preset="atrisk"><i class="fa-solid fa-triangle-exclamation" style="color:#EF4444;"></i> At-Risk Lapsed Customer</button>
+                            <button type="button" class="btn btn-secondary btn-sandbox-preset" data-preset="newbuyer"><i class="fa-solid fa-seedling" style="color:#8B5CF6;"></i> New App Sign-Up</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid-2col">
+                    <!-- Form Controls -->
+                    <div class="glass-card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-sliders"></i> Test Customer Behavior Inputs</h3>
+                        </div>
+                        <form id="sandbox-form">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Annual Spend ($ USD)</label>
+                                    <input type="number" id="sb-spend" value="8500.00" min="0" step="any" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Days Since Last Visit</label>
+                                    <input type="number" id="sb-recency" value="8" min="0" step="any" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Annual Orders Count</label>
+                                    <input type="number" id="sb-frequency" value="48" min="0" step="any" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Discount Usage Ratio (0.0 to 1.0)</label>
+                                    <input type="number" id="sb-discount" value="0.05" min="0" max="1" step="any" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Item Return Percentage (0.0 to 0.5)</label>
+                                    <input type="number" id="sb-return" value="0.01" min="0" max="1" step="any" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>App Engagement Score (1-100)</label>
+                                    <input type="number" id="sb-engagement" value="92.0" min="0" max="100" step="any" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block" style="margin-top:16px;"><i class="fa-solid fa-play"></i> Simulate ML Pipeline Execution</button>
+                        </form>
+                    </div>
+
+                    <!-- Visual Step-by-Step Flow Explanation -->
+                    <div class="glass-card" id="sandbox-explanation-card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-diagram-project"></i> ML Pipeline Decision Flow</h3>
+                        </div>
+
+                        <div id="sandbox-pipeline-steps" style="display:flex; flex-direction:column; gap:14px;">
+                            <div class="pipeline-step-item" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:14px;">
+                                <strong style="color:#3B82F6; font-size:13px;"><i class="fa-solid fa-1"></i> Step 1: Feature Scaling & Normalization</strong>
+                                <p style="font-size:12px; color:var(--text-muted); margin-top:4px;">Transforms raw spend ($8,500) and recency (8d) into standard z-score vectors.</p>
+                            </div>
+                            <div class="pipeline-step-item" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:14px;">
+                                <strong style="color:#8B5CF6; font-size:13px;"><i class="fa-solid fa-2"></i> Step 2: Persona Classification (Random Forest)</strong>
+                                <p style="font-size:12px; color:var(--text-muted); margin-top:4px;">Evaluates feature weights to match the customer to the closest persona cluster.</p>
+                            </div>
+                            <div class="pipeline-step-item" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:14px;">
+                                <strong style="color:#10B981; font-size:13px;"><i class="fa-solid fa-3"></i> Step 3: 12-Month LTV Forecast (Gradient Boosting)</strong>
+                                <p style="font-size:12px; color:var(--text-muted); margin-top:4px;">Predicts projected 12-month future spend using trained regression trees.</p>
+                            </div>
+                            <div class="pipeline-step-item" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:14px;">
+                                <strong style="color:#F59E0B; font-size:13px;"><i class="fa-solid fa-4"></i> Step 4: Churn Index & Anomaly Audit (DBSCAN)</strong>
+                                <p style="font-size:12px; color:var(--text-muted); margin-top:4px;">Computes churn risk index and checks for discount abuser or fraud behavior.</p>
+                            </div>
+                        </div>
+
+                        <div id="sandbox-result-box" style="margin-top:20px;"></div>
+                    </div>
+                </div>
+            </section>
+
             <!-- TAB 3: PCA 3D VISUALIZATION -->
             <section id="tab-clusters" class="tab-content">
                 <div class="glass-card scatter-card">
                     <div class="card-header flex-between">
                         <div>
-                            <h2><i class="fa-solid fa-cubes"></i> 2D & 3D PCA Dimensionality Scatterplot</h2>
-                            <p class="card-sub">Principal Component Projections of 5,000 Customer Feature Vectors</p>
+                            <h2><i class="fa-solid fa-cubes"></i> 2D PCA Dimensionality Scatterplot</h2>
+                            <p class="card-sub">Principal Component Projections (PC1 vs PC2)</p>
                         </div>
                         <div class="pill-group">
-                            <span class="pill-badge active">PCA Component 1 & 2</span>
-                            <span class="pill-badge">Color Code: K-Means Persona</span>
+                            <span class="pill-badge active">2D Projection</span>
                         </div>
                     </div>
                     <div class="chart-wrapper-large">
                         <canvas id="pcaScatterChart"></canvas>
                     </div>
+                </div>
+
+                <div class="glass-card scatter-card" style="margin-top: 24px;">
+                    <div class="card-header flex-between">
+                        <div>
+                            <h2><i class="fa-solid fa-cube"></i> Interactive 3D WebGL PCA Point Cloud</h2>
+                            <p class="card-sub">Rotate, zoom, and inspect individual customer vectors in 3D feature space</p>
+                        </div>
+                        <span class="pill-badge active">3D WebGL Projection</span>
+                    </div>
+                    <div id="plotly3dPcaContainer" style="height: 520px; width: 100%;"></div>
                 </div>
             </section>
 
@@ -241,35 +580,35 @@
                             <div class="form-grid">
                                 <div class="form-group">
                                     <label>Recency (Days since last purchase)</label>
-                                    <input type="number" id="pred-recency" value="15" min="1" max="365" required>
+                                    <input type="number" id="pred-recency" value="15" min="0" step="any" required>
                                 </div>
                                 <div class="form-group">
                                     <label>Frequency (Orders in last 12 mo)</label>
-                                    <input type="number" id="pred-frequency" value="42" min="1" max="200" required>
+                                    <input type="number" id="pred-frequency" value="42" min="0" step="any" required>
                                 </div>
                                 <div class="form-group">
                                     <label>Monetary Spend ($ USD)</label>
-                                    <input type="number" step="0.01" id="pred-monetary" value="5200.00" min="1" required>
+                                    <input type="number" id="pred-monetary" value="5200.00" min="0" step="any" required>
                                 </div>
                                 <div class="form-group">
                                     <label>Category Diversity (1-10)</label>
-                                    <input type="number" id="pred-category" value="7" min="1" max="10" required>
+                                    <input type="number" id="pred-category" value="7" min="1" max="10" step="any" required>
                                 </div>
                                 <div class="form-group">
                                     <label>Engagement Score (1-100)</label>
-                                    <input type="number" step="0.1" id="pred-engagement" value="88.5" min="1" max="100" required>
+                                    <input type="number" id="pred-engagement" value="88.5" min="0" max="100" step="any" required>
                                 </div>
                                 <div class="form-group">
                                     <label>Support Tickets Submitted</label>
-                                    <input type="number" id="pred-tickets" value="1" min="0" max="20" required>
+                                    <input type="number" id="pred-tickets" value="1" min="0" step="any" required>
                                 </div>
                                 <div class="form-group">
                                     <label>Discount Usage Ratio (0.00 - 1.00)</label>
-                                    <input type="number" step="0.01" id="pred-discount" value="0.15" min="0" max="1" required>
+                                    <input type="number" id="pred-discount" value="0.15" min="0" max="1" step="any" required>
                                 </div>
                                 <div class="form-group">
                                     <label>Return Rate (0.00 - 0.50)</label>
-                                    <input type="number" step="0.01" id="pred-return" value="0.03" min="0" max="0.5" required>
+                                    <input type="number" id="pred-return" value="0.03" min="0" max="1" step="any" required>
                                 </div>
                             </div>
                             <button type="submit" class="btn btn-primary btn-block"><i class="fa-solid fa-sparkles"></i> Classify Customer Persona</button>

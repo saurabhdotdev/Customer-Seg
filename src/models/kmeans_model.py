@@ -22,10 +22,11 @@ class KMeansSegmentationModel:
         best_silhouette = -1.0
         
         for k in k_range:
-            km = KMeans(n_clusters=k, random_state=self.random_state, n_init=10)
+            km = KMeans(n_clusters=k, random_state=self.random_state, n_init=5)
             labels = km.fit_predict(X)
             inertia = float(km.inertia_)
-            sil = float(silhouette_score(X, labels))
+            sample_sz = 10000 if len(X) > 10000 else None
+            sil = float(silhouette_score(X, labels, sample_size=sample_sz, random_state=42))
             db = float(davies_bouldin_score(X, labels))
             ch = float(calinski_harabasz_score(X, labels))
             

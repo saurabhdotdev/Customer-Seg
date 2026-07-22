@@ -16,15 +16,22 @@ class DBSCANSegmentationModel:
     def tune_hyperparameters(self, X: np.ndarray, eps_values: list = [0.8, 1.0, 1.2, 1.5, 1.8, 2.0], min_samples_values: list = [10, 15, 20, 25]) -> dict:
         """
         Performs grid search over eps and min_samples parameters.
+        Optimized with sub-sampling for large N.
         """
         best_silhouette = -1.0
         best_params = {'eps': self.eps, 'min_samples': self.min_samples}
         grid_results = []
 
+        X_tune = X
+        if len(X) > 10000:
+            rng = np.random.RandomState(42)
+            idx = rng.choice(len(X), size=10000, replace=False)
+            X_tune = X[idx]
+
         for eps in eps_values:
             for ms in min_samples_values:
                 dbscan = DBSCAN(eps=eps, min_samples=ms)
-                labels = dbscan.fit_predict(X)
+                labels = dbscan.fit_predict(X_tune)
                 
                 n_clusters = len(set(labels)) - (1 if -1 in labels else 0)
                 n_noise = list(labels).count(-1)
@@ -34,9 +41,10 @@ class DBSCANSegmentationModel:
                     # Evaluate metrics on non-noise points
                     valid_mask = labels != -1
                     if len(set(labels[valid_mask])) > 1:
-                        sil = float(silhouette_score(X[valid_mask], labels[valid_mask]))
-                        db = float(davies_bouldin_score(X[valid_mask], labels[valid_mask]))
-                        ch = float(calinski_harabasz_score(X[valid_mask], labels[valid_mask]))
+                        sample_sz = 10000 if len(X_tune[valid_mask]) > 10000 else None
+                        sil = float(silhouette_score(X_tune[valid_mask], labels[valid_mask], sample_size=sample_sz, random_state=42))
+                        db = float(davies_bouldin_score(X_tune[valid_mask], labels[valid_mask]))
+                        ch = float(calinski_harabasz_score(X_tune[valid_mask], labels[valid_mask]))
                     else:
                         sil, db, ch = -1.0, 999.0, 0.0
                 else:

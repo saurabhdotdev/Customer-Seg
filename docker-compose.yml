@@ -1,0 +1,11 @@
+services:
+  customer-intelligence:
+    build: .
+    container_name: customer-intelligence-platform
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./data:/app/data
+      - ./models_saved:/app/models_saved

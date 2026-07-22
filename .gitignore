@@ -2,7 +2,10 @@ venv/
 __pycache__/
 *.pyc
 .pytest_cache/
+*.log
+.vercel/
 models_saved/*.joblib
 data/raw/customer_transactions.csv
 data/processed/customer_features.csv
 data/processed/customer_segments.csv
+

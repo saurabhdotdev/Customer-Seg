@@ -79,11 +79,16 @@ class CustomerAnalyticsQueryEngine:
         elif "dbscan" in q or "outlier" in q or "noise" in q:
             db_noise = len(df[df['DBSCAN_Cluster'] == -1])
             noise_pct = (db_noise / len(df)) * 100.0
+            db_grid = metadata.get('dbscan_search_grid', [])
+            valid_runs = [run for run in db_grid if run.get('silhouette_score', -1.0) >= 0]
+            best_dbscan = max(valid_runs, key=lambda run: run.get('silhouette_score', -1.0)) if valid_runs else {}
+            eps = best_dbscan.get('eps', 'tuned')
+            min_samples = best_dbscan.get('min_samples', 'tuned')
             
             return {
                 "query": query_text,
                 "category": "Density & Outlier Detection",
-                "answer": f"DBSCAN identified **{db_noise} anomalous/noise points** ({noise_pct:.1f}% of customer base) using Epsilon=1.5 and MinSamples=20.",
+                "answer": f"DBSCAN identified **{db_noise} anomalous/noise points** ({noise_pct:.1f}% of customer base) using Epsilon={eps} and MinSamples={min_samples}.",
                 "key_stats": {
                     "outliers_count": db_noise,
                     "outliers_percentage": round(noise_pct, 2),

@@ -1,119 +1,214 @@
-# High-Yield Customer Segmentation & Behavioral Intelligence Platform 🚀
+# Customer Intelligence Platform
 
-A production-grade, multi-algorithm machine learning platform designed for e-commerce and retail customer segmentation. Features **K-Means**, **DBSCAN**, **Hierarchical Agglomerative Clustering**, and **Gaussian Mixture Models (GMM)**, complete with RFM feature engineering, PCA 2D/3D dimensionality reduction, business persona playbooks, a **FastAPI backend**, an **interactive glassmorphism dark-mode web dashboard**, and a **Jupyter Notebook**.
+An end-to-end AIML project for customer segmentation, anomaly detection, and marketing decision support. The system combines unsupervised learning, RFM feature engineering, model benchmarking, explainable segment profiles, campaign recommendations, a FastAPI backend, and an interactive web dashboard.
 
----
+This project is designed to go beyond a basic clustering notebook. It is structured like a production-style customer analytics system that a retail, e-commerce, fintech, or subscription business could adapt for real customer lifecycle decisions.
 
-## 🌟 Key Features
+## Why This Project Is Differentiable
 
-- **Multi-Algorithm ML Suite**: Compare K-Means, DBSCAN, Agglomerative Hierarchical Clustering, and GMM side-by-side.
-- **RFM Feature Engineering**: Computes Recency, Frequency, and Monetary scores alongside skewness log transformations, standard scaling, and categorical one-hot encoding.
-- **Dimensionality Reduction**: 2D and 3D PCA projections for customer cluster separation and visualization.
-- **Evaluation Benchmark Engine**: Evaluates Silhouette Score, Davies-Bouldin Index, Calinski-Harabasz Index, and density noise ratio across all algorithms.
-- **Automated Business Personas & Strategies**: Maps cluster centroids to actionable marketing playbooks (VIP Champions, Steady Loyalists, At-Risk Hibernating, Bargain Hunters, New Buyers).
-- **Executive Dark-Mode Web Dashboard**: Built with HTML5, CSS3, JavaScript, and Chart.js featuring real-time cluster visualizer, algorithm matrix, and live customer prediction tool.
-- **FastAPI REST API**: Serving predictions, metrics, persona playbooks, and dataset exports.
-- **Data Science Notebook**: Complete Jupyter Notebook (`notebooks/customer_segmentation_analysis.ipynb`) adhering strictly to ML best practices.
+- **Multi-model unsupervised learning**: K-Means, DBSCAN, Hierarchical Agglomerative Clustering, and Gaussian Mixture Models are trained and benchmarked side by side.
+- **Production model strategy**: K-Means is used for stable customer segmentation, while DBSCAN acts as an anomaly and risk-detection layer.
+- **Business-ready intelligence**: Each segment is converted into personas, revenue contribution, churn risk, and campaign recommendations.
+- **Explainable clustering**: The system identifies the strongest drivers behind every segment using feature-level deviations from the global customer profile.
+- **Model stability analysis**: K-Means reproducibility is evaluated with repeated resampling and Adjusted Rand Index.
+- **Real API surface**: FastAPI endpoints serve predictions, benchmark results, personas, explainability, high-risk customers, anomaly summaries, and campaign recommendations.
+- **Future-ready architecture**: The repo separates data generation, preprocessing, modeling, insights, backend API, frontend dashboard, and saved model artifacts.
 
----
+## Project Architecture
 
-## 📁 Repository Structure
-
-```
+```text
 Customer-Seg/
-├── data/
-│   ├── raw/
-│   │   └── customer_transactions.csv
-│   └── processed/
-│       ├── customer_features.csv
-│       └── customer_segments.csv
-├── src/
-│   ├── data/
-│   │   ├── generator.py           # Synthetic customer dataset generator (5,000 samples)
-│   │   └── preprocessor.py        # RFM calculator, log transformer, scaler & encoder
-│   ├── models/
-│   │   ├── kmeans_model.py        # K-Means + Elbow & Silhouette search
-│   │   ├── dbscan_model.py        # DBSCAN + Epsilon grid search
-│   │   ├── hierarchical_model.py  # Agglomerative clustering
-│   │   ├── gmm_model.py           # Gaussian Mixture Model + BIC/AIC search
-│   │   └── evaluator.py           # Benchmark comparison evaluator
-│   ├── visualization/
-│   │   └── dimensionality.py      # 2D/3D PCA & t-SNE projections
-│   └── insights/
-│       └── persona_generator.py   # Business personas & recommendation engine
 ├── backend/
-│   ├── main.py                    # FastAPI application entrypoint
-│   ├── config.py                  # Path and environment configuration
+│   ├── main.py                  # FastAPI application
+│   ├── config.py                # Path and artifact configuration
 │   └── api/
-│       ├── routes.py              # Endpoints: predict, benchmark, personas, pca3d
-│       └── schemas.py             # Pydantic data schemas
+│       ├── routes.py            # REST API endpoints
+│       └── schemas.py           # Pydantic request/response schemas
+├── data/
+│   ├── raw/                     # Generated or imported transactions
+│   └── processed/               # Feature and segment outputs
 ├── frontend/
-│   ├── index.html                 # Single-page web app shell
-│   ├── css/
-│   │   └── styles.css             # Glassmorphism dark-mode styles
+│   ├── index.html               # Dashboard shell
+│   ├── css/styles.css
 │   └── js/
-│       ├── app.js                 # Dashboard controller
-│       └── charts.js              # Chart.js visualization engine
+├── models_saved/
+│   ├── scaler.joblib            # Preprocessing pipeline
+│   ├── kmeans_model.joblib      # Production segmentation model
+│   ├── pca.joblib               # PCA projection model
+│   └── model_metadata.json      # Benchmarks, personas, explanations
 ├── notebooks/
-│   └── customer_segmentation_analysis.ipynb # Complete ML notebook
-├── models_saved/                  # Fitted scalers, PCA models & metadata
-├── requirements.txt               # Python package dependencies
-├── run_demo.py                    # Complete pipeline runner & server launcher
-└── README.md
+│   └── customer_segmentation_analysis.ipynb
+├── src/
+│   ├── data/                    # Synthetic dataset generation and preprocessing
+│   ├── models/                  # Clustering algorithms and evaluation
+│   ├── visualization/           # PCA dimensionality reduction
+│   └── insights/                # Personas, analytics, explainability, campaigns
+├── requirements.txt
+└── run_demo.py                  # Full pipeline runner
 ```
 
----
+## Machine Learning Workflow
 
-## 🚀 Quick Start Guide
+1. **Generate or load customer data**
+   - Recency, frequency, monetary value, engagement, channel, returns, discounts, support tickets, and churn-risk indicators.
 
-### 1. Environment Setup
+2. **Feature engineering**
+   - RFM scoring
+   - Average order value
+   - Churn risk index
+   - Log transforms for skewed financial and frequency variables
+   - Standard scaling and categorical one-hot encoding
+
+3. **Model training**
+   - K-Means with optimal K search
+   - DBSCAN with epsilon and min-samples grid search
+   - Hierarchical Agglomerative Clustering
+   - Gaussian Mixture Model
+
+4. **Model evaluation**
+   - Silhouette Score
+   - Davies-Bouldin Index
+   - Calinski-Harabasz Index
+   - DBSCAN noise ratio
+   - K-Means stability using Adjusted Rand Index
+
+5. **Business intelligence layer**
+   - Segment personas
+   - Segment explanations
+   - Revenue and churn priority
+   - High-risk customer ranking
+   - Campaign recommendations
+   - DBSCAN anomaly summary
+
+## API Endpoints
+
+| Endpoint | Purpose |
+| :--- | :--- |
+| `GET /api/health` | API health check |
+| `GET /api/overview` | Portfolio-level customer KPIs |
+| `GET /api/model/info` | Production model, artifacts, PCA, and stability report |
+| `GET /api/data/schema` | Required CSV schema for uploads |
+| `POST /api/data/upload` | Upload CSV and retrain the full ML pipeline |
+| `GET /api/benchmark` | Multi-algorithm clustering comparison |
+| `GET /api/personas` | Segment personas and business metrics |
+| `GET /api/segments/explainability` | Feature drivers behind each segment |
+| `GET /api/recommendations/campaigns` | Campaign recommendations ranked by priority |
+| `GET /api/anomalies` | DBSCAN anomaly summary and top anomalous customers |
+| `GET /api/customers/high-risk` | Customers with highest churn and revenue risk |
+| `GET /api/reports/executive` | Download a plain-text executive report |
+| `GET /api/visualization/pca3d` | PCA coordinates for 2D/3D visualization |
+| `POST /api/segment/predict` | Predict the segment for a new customer |
+| `POST /api/analytics/ask` | Query the analytics layer with natural-language-like prompts |
+
+## Quick Start
+
 ```bash
-# Create virtual environment
 python -m venv venv
-
-# Activate virtual environment (Windows)
 .\venv\Scripts\activate
-
-# Install dependencies
 pip install -r requirements.txt
-```
-
-### 2. Run Complete Pipeline & Launch Web Server
-Execute the automated orchestrator script:
-```bash
 python run_demo.py
 ```
-This will automatically:
-1. Generate the 5,000 customer transaction dataset.
-2. Run feature preprocessing and RFM scoring.
-3. Fit and tune K-Means, DBSCAN, HAC, and GMM models.
-4. Calculate PCA 3D coordinates.
-5. Generate model comparison benchmarks and persona metadata.
+
+The pipeline will:
+
+1. Generate 5,000 customer records.
+2. Build RFM and behavioral features.
+3. Train and benchmark four clustering algorithms.
+4. Save preprocessing, K-Means, PCA, and metadata artifacts.
+5. Generate personas, explainability, anomaly, stability, and campaign reports.
 6. Launch the FastAPI server at `http://127.0.0.1:8000`.
 
----
+For pipeline execution without launching the server:
 
-## 📊 Customer Persona Strategy Matrix
+```bash
+python run_demo.py --no-server
+```
 
-| Persona | Description | Key Metric Indicator | Strategic Playbook |
-| :--- | :--- | :--- | :--- |
-| **🌟 VIP Champions** | Highest spenders & frequent buyers | Spend > $3,500, Recency < 30 days | Exclusive VIP perks, early product access |
-| **💎 Steady Loyalists** | Consistent repeat purchasers | Freq > 20 orders, Recency < 60 days | Cross-sell & tier upgrade incentives |
-| **⚠️ At-Risk / Hibernating** | Formerly high spenders now inactive | Recency > 120 days, high support tickets | Win-back email drip & re-engagement discounts |
-| **🏷️ Bargain Hunters** | Sale & promo driven buyers | Discount usage ratio > 60% | Flash clearance & volume bundle offers |
-| **🌱 New Buyers** | Recent first-time purchasers | Orders 1-3, Recency < 25 days | Product onboarding series & welcome offers |
+## Run With Docker
 
----
+If Docker Desktop is running:
 
-## 📡 API Endpoints Summary
+```bash
+docker compose up --build
+```
 
-- `GET /api/overview`: Overview KPIs (Total customers, total revenue, average spend).
-- `GET /api/benchmark`: Comparative evaluation table across all 4 algorithms.
-- `GET /api/personas`: Persona descriptions, metric breakdowns, and strategic playbooks.
-- `GET /api/visualization/pca3d`: 2D/3D PCA point coordinates for scatterplot visualizer.
-- `POST /api/segment/predict`: Classifies new customer inputs in real-time.
+Then open:
 
----
+```text
+http://127.0.0.1:8000
+```
 
-## 📜 License
-Apache-2.0 License.
+The Compose setup persists generated datasets and model artifacts through the local `data/` and `models_saved/` folders.
+
+## CSV Upload Workflow
+
+Open the dashboard and go to **Data Studio**:
+
+```text
+Upload Data -> Train Models -> View Segments -> Predict Customers -> Download Executive Report
+```
+
+Required columns:
+
+```text
+Recency_Days
+Frequency_Orders
+Monetary_Spend
+Category_Diversity
+Engagement_Score
+Support_Tickets
+Discount_Ratio
+Return_Rate
+Preferred_Channel
+Gender
+```
+
+Optional columns:
+
+```text
+Customer_ID
+Age
+```
+
+If `Customer_ID` is missing, stable IDs are generated. If `Age` is missing, a default value is used.
+
+## Example Prediction Payload
+
+```json
+{
+  "Recency_Days": 18,
+  "Frequency_Orders": 32,
+  "Monetary_Spend": 4200.0,
+  "Category_Diversity": 6,
+  "Engagement_Score": 82.0,
+  "Support_Tickets": 1,
+  "Discount_Ratio": 0.18,
+  "Return_Rate": 0.04,
+  "Age": 34,
+  "Preferred_Channel": "Mobile App",
+  "Gender": "Female"
+}
+```
+
+## Real-World Use Cases
+
+- Customer lifecycle segmentation
+- Personalized marketing automation
+- Churn-risk prioritization
+- Campaign budget allocation
+- VIP customer retention
+- Discount sensitivity analysis
+- Anomaly and unusual behavior detection
+- Executive customer analytics dashboarding
+
+## Future Enhancements
+
+- Add MLflow or DVC for experiment tracking
+- Add cloud deployment
+- Add scheduled retraining
+- Add SHAP-style local explanations for individual predictions
+- Add uplift modeling for campaign response optimization
+
+## License
+
+Apache-2.0

@@ -1,278 +1,1033 @@
 {
-  "total_samples": 5000,
+  "project_positioning": "Production-style customer intelligence platform for segmentation, anomaly detection, real-time prediction, and marketing decisioning.",
+  "trained_at_utc": "2026-07-22T08:57:55.738598+00:00",
+  "data_source": "synthetic_demo_50000",
+  "validation_warnings": [],
+  "total_samples": 50000,
   "optimal_k": 4,
+  "production_model": "K-Means Clustering",
+  "realtime_classifier": "RandomForestClassifier",
+  "anomaly_model": "DBSCAN (Density-Based)",
+  "classifier_metrics": {
+    "accuracy": 0.9896,
+    "weighted_f1_score": 0.9896,
+    "report": {
+      "0": {
+        "precision": 0.9934462042599672,
+        "recall": 0.9784830554061323,
+        "f1-score": 0.9859078590785908,
+        "support": 1859.0
+      },
+      "1": {
+        "precision": 0.9956793086893903,
+        "recall": 0.9892678273312664,
+        "f1-score": 0.9924632133030267,
+        "support": 4193.0
+      },
+      "2": {
+        "precision": 0.9753661784287616,
+        "recall": 0.9945689069925322,
+        "f1-score": 0.984873949579832,
+        "support": 2946.0
+      },
+      "3": {
+        "precision": 1.0,
+        "recall": 0.9970059880239521,
+        "f1-score": 0.9985007496251874,
+        "support": 1002.0
+      },
+      "accuracy": 0.9896,
+      "macro avg": {
+        "precision": 0.9911229228445297,
+        "recall": 0.9898314444384708,
+        "f1-score": 0.9904364428966592,
+        "support": 10000.0
+      },
+      "weighted avg": {
+        "precision": 0.9897128596705025,
+        "recall": 0.9896,
+        "f1-score": 0.9896137369993314,
+        "support": 10000.0
+      }
+    }
+  },
+  "classifier_feature_importances": [
+    {
+      "feature": "Age",
+      "importance": 0.2067
+    },
+    {
+      "feature": "Monetary_Spend",
+      "importance": 0.1708
+    },
+    {
+      "feature": "Recency_Days",
+      "importance": 0.1273
+    },
+    {
+      "feature": "Discount_Ratio",
+      "importance": 0.107
+    },
+    {
+      "feature": "Support_Tickets",
+      "importance": 0.0888
+    },
+    {
+      "feature": "Return_Rate",
+      "importance": 0.0881
+    },
+    {
+      "feature": "Frequency_Orders",
+      "importance": 0.078
+    },
+    {
+      "feature": "Engagement_Score",
+      "importance": 0.074
+    },
+    {
+      "feature": "Category_Diversity",
+      "importance": 0.049
+    },
+    {
+      "feature": "App_Sessions_Per_Month",
+      "importance": 0.0049
+    },
+    {
+      "feature": "Customer_LTV",
+      "importance": 0.0035
+    },
+    {
+      "feature": "NPS_Score",
+      "importance": 0.0008
+    },
+    {
+      "feature": "Churn_Risk_Index",
+      "importance": 0.0004
+    },
+    {
+      "feature": "Avg_Order_Value",
+      "importance": 0.0004
+    },
+    {
+      "feature": "R_Score",
+      "importance": 0.0001
+    }
+  ],
+  "model_artifacts": {
+    "preprocessing_pipeline": "C:\\Users\\saura\\OneDrive\\Desktop\\Customer-Seg\\models_saved\\scaler.joblib",
+    "kmeans_model": "C:\\Users\\saura\\OneDrive\\Desktop\\Customer-Seg\\models_saved\\kmeans_model.joblib",
+    "classifier_model": "C:\\Users\\saura\\OneDrive\\Desktop\\Customer-Seg\\models_saved\\classifier.joblib",
+    "pca_model": "C:\\Users\\saura\\OneDrive\\Desktop\\Customer-Seg\\models_saved\\pca.joblib"
+  },
   "k_search_grid": [
     {
       "k": 2,
-      "inertia": 36104.59,
-      "silhouette_score": 0.287,
-      "davies_bouldin": 1.5066,
-      "calinski_harabasz": 2024.55
+      "inertia": 371398.91,
+      "silhouette_score": 0.2725,
+      "davies_bouldin": 1.5656,
+      "calinski_harabasz": 18268.29
     },
     {
       "k": 3,
-      "inertia": 26026.04,
-      "silhouette_score": 0.3571,
-      "davies_bouldin": 1.1529,
-      "calinski_harabasz": 2371.54
+      "inertia": 281205.72,
+      "silhouette_score": 0.3254,
+      "davies_bouldin": 1.3145,
+      "calinski_harabasz": 20081.52
     },
     {
       "k": 4,
-      "inertia": 18137.86,
-      "silhouette_score": 0.4199,
-      "davies_bouldin": 0.9418,
-      "calinski_harabasz": 2992.42
+      "inertia": 218391.43,
+      "silhouette_score": 0.3733,
+      "davies_bouldin": 1.0428,
+      "calinski_harabasz": 22031.26
     },
     {
       "k": 5,
-      "inertia": 16140.69,
-      "silhouette_score": 0.336,
-      "davies_bouldin": 1.1946,
-      "calinski_harabasz": 2676.02
+      "inertia": 199136.97,
+      "silhouette_score": 0.2881,
+      "davies_bouldin": 1.2514,
+      "calinski_harabasz": 19329.24
     },
     {
       "k": 6,
-      "inertia": 15504.66,
-      "silhouette_score": 0.2817,
-      "davies_bouldin": 1.6542,
-      "calinski_harabasz": 2269.17
+      "inertia": 183334.21,
+      "silhouette_score": 0.2908,
+      "davies_bouldin": 1.5361,
+      "calinski_harabasz": 17657.8
     },
     {
       "k": 7,
-      "inertia": 14886.57,
-      "silhouette_score": 0.2527,
-      "davies_bouldin": 1.7502,
-      "calinski_harabasz": 2003.65
+      "inertia": 177055.19,
+      "silhouette_score": 0.2634,
+      "davies_bouldin": 1.6462,
+      "calinski_harabasz": 15531.85
     },
     {
       "k": 8,
-      "inertia": 14426.3,
-      "silhouette_score": 0.2052,
-      "davies_bouldin": 2.017,
-      "calinski_harabasz": 1794.6
+      "inertia": 169852.92,
+      "silhouette_score": 0.2633,
+      "davies_bouldin": 1.6935,
+      "calinski_harabasz": 14180.09
     },
     {
       "k": 9,
-      "inertia": 13943.26,
-      "silhouette_score": 0.2097,
-      "davies_bouldin": 1.9397,
-      "calinski_harabasz": 1645.96
+      "inertia": 165026.68,
+      "silhouette_score": 0.2164,
+      "davies_bouldin": 1.8289,
+      "calinski_harabasz": 12952.95
+    }
+  ],
+  "dbscan_search_grid": [
+    {
+      "eps": 0.8,
+      "min_samples": 10,
+      "n_clusters": 36,
+      "n_noise": 3761,
+      "noise_ratio": 0.3761,
+      "silhouette_score": -1.0,
+      "davies_bouldin": 999.0,
+      "calinski_harabasz": 0.0
+    },
+    {
+      "eps": 0.8,
+      "min_samples": 15,
+      "n_clusters": 24,
+      "n_noise": 5152,
+      "noise_ratio": 0.5152,
+      "silhouette_score": -1.0,
+      "davies_bouldin": 999.0,
+      "calinski_harabasz": 0.0
+    },
+    {
+      "eps": 0.8,
+      "min_samples": 20,
+      "n_clusters": 15,
+      "n_noise": 5874,
+      "noise_ratio": 0.5874,
+      "silhouette_score": -1.0,
+      "davies_bouldin": 999.0,
+      "calinski_harabasz": 0.0
+    },
+    {
+      "eps": 0.8,
+      "min_samples": 25,
+      "n_clusters": 12,
+      "n_noise": 6324,
+      "noise_ratio": 0.6324,
+      "silhouette_score": -1.0,
+      "davies_bouldin": 999.0,
+      "calinski_harabasz": 0.0
+    },
+    {
+      "eps": 1.0,
+      "min_samples": 10,
+      "n_clusters": 24,
+      "n_noise": 1780,
+      "noise_ratio": 0.178,
+      "silhouette_score": 0.14704281689822368,
+      "davies_bouldin": 1.684101629531991,
+      "calinski_harabasz": 1333.0120883944833
+    },
+    {
+      "eps": 1.0,
+      "min_samples": 15,
+      "n_clusters": 20,
+      "n_noise": 2024,
+      "noise_ratio": 0.2024,
+      "silhouette_score": 0.1848111600135904,
+      "davies_bouldin": 1.733564764328109,
+      "calinski_harabasz": 1571.676739186745
+    },
+    {
+      "eps": 1.0,
+      "min_samples": 20,
+      "n_clusters": 20,
+      "n_noise": 2326,
+      "noise_ratio": 0.2326,
+      "silhouette_score": 0.18758754446203935,
+      "davies_bouldin": 1.6934224281936658,
+      "calinski_harabasz": 1529.3821499000971
+    },
+    {
+      "eps": 1.0,
+      "min_samples": 25,
+      "n_clusters": 20,
+      "n_noise": 2711,
+      "noise_ratio": 0.2711,
+      "silhouette_score": 0.18684908767931868,
+      "davies_bouldin": 1.6599290409315413,
+      "calinski_harabasz": 1454.6036549716052
+    },
+    {
+      "eps": 1.2,
+      "min_samples": 10,
+      "n_clusters": 24,
+      "n_noise": 1550,
+      "noise_ratio": 0.155,
+      "silhouette_score": 0.17035716343188118,
+      "davies_bouldin": 1.7596152092970356,
+      "calinski_harabasz": 1349.9019553911178
+    },
+    {
+      "eps": 1.2,
+      "min_samples": 15,
+      "n_clusters": 23,
+      "n_noise": 1597,
+      "noise_ratio": 0.1597,
+      "silhouette_score": 0.1577737173407383,
+      "davies_bouldin": 1.7309558011282076,
+      "calinski_harabasz": 1405.247797306275
+    },
+    {
+      "eps": 1.2,
+      "min_samples": 20,
+      "n_clusters": 21,
+      "n_noise": 1659,
+      "noise_ratio": 0.1659,
+      "silhouette_score": 0.1815031452875417,
+      "davies_bouldin": 1.7646486995700477,
+      "calinski_harabasz": 1531.4334968416283
+    },
+    {
+      "eps": 1.2,
+      "min_samples": 25,
+      "n_clusters": 20,
+      "n_noise": 1728,
+      "noise_ratio": 0.1728,
+      "silhouette_score": 0.18295056731245343,
+      "davies_bouldin": 1.7712031206999388,
+      "calinski_harabasz": 1602.2630871665024
+    },
+    {
+      "eps": 1.5,
+      "min_samples": 10,
+      "n_clusters": 2,
+      "n_noise": 1335,
+      "noise_ratio": 0.1335,
+      "silhouette_score": 0.3249201230365225,
+      "davies_bouldin": 1.0011722461489885,
+      "calinski_harabasz": 2295.8614491308654
+    },
+    {
+      "eps": 1.5,
+      "min_samples": 15,
+      "n_clusters": 2,
+      "n_noise": 1354,
+      "noise_ratio": 0.1354,
+      "silhouette_score": 0.32522760359905856,
+      "davies_bouldin": 1.0008301300214208,
+      "calinski_harabasz": 2295.6517406553553
+    },
+    {
+      "eps": 1.5,
+      "min_samples": 20,
+      "n_clusters": 2,
+      "n_noise": 1385,
+      "noise_ratio": 0.1385,
+      "silhouette_score": 0.32570491414196345,
+      "davies_bouldin": 0.999829792843138,
+      "calinski_harabasz": 2296.6108460216515
+    },
+    {
+      "eps": 1.5,
+      "min_samples": 25,
+      "n_clusters": 2,
+      "n_noise": 1408,
+      "noise_ratio": 0.1408,
+      "silhouette_score": 0.3260543491271161,
+      "davies_bouldin": 0.9995559352728344,
+      "calinski_harabasz": 2295.9346525965616
+    },
+    {
+      "eps": 1.8,
+      "min_samples": 10,
+      "n_clusters": 2,
+      "n_noise": 827,
+      "noise_ratio": 0.0827,
+      "silhouette_score": 0.31796699418964564,
+      "davies_bouldin": 0.9965860522058552,
+      "calinski_harabasz": 2312.746930857389
+    },
+    {
+      "eps": 1.8,
+      "min_samples": 15,
+      "n_clusters": 2,
+      "n_noise": 1034,
+      "noise_ratio": 0.1034,
+      "silhouette_score": 0.3211598498140044,
+      "davies_bouldin": 0.9990425737362615,
+      "calinski_harabasz": 2312.423651366297
+    },
+    {
+      "eps": 1.8,
+      "min_samples": 20,
+      "n_clusters": 2,
+      "n_noise": 1059,
+      "noise_ratio": 0.1059,
+      "silhouette_score": 0.32179410249349844,
+      "davies_bouldin": 0.9991619606141172,
+      "calinski_harabasz": 2315.063687643835
+    },
+    {
+      "eps": 1.8,
+      "min_samples": 25,
+      "n_clusters": 2,
+      "n_noise": 1073,
+      "noise_ratio": 0.1073,
+      "silhouette_score": 0.32204833014519546,
+      "davies_bouldin": 0.9993833360284117,
+      "calinski_harabasz": 2315.033011058608
+    },
+    {
+      "eps": 2.0,
+      "min_samples": 10,
+      "n_clusters": 2,
+      "n_noise": 406,
+      "noise_ratio": 0.0406,
+      "silhouette_score": 0.30996008014540977,
+      "davies_bouldin": 0.9944882216792441,
+      "calinski_harabasz": 2291.0987549951183
+    },
+    {
+      "eps": 2.0,
+      "min_samples": 15,
+      "n_clusters": 2,
+      "n_noise": 563,
+      "noise_ratio": 0.0563,
+      "silhouette_score": 0.31308081554505107,
+      "davies_bouldin": 0.9953092549728423,
+      "calinski_harabasz": 2300.327822888486
+    },
+    {
+      "eps": 2.0,
+      "min_samples": 20,
+      "n_clusters": 2,
+      "n_noise": 655,
+      "noise_ratio": 0.0655,
+      "silhouette_score": 0.31523760234771275,
+      "davies_bouldin": 0.9954247808893112,
+      "calinski_harabasz": 2309.0305565833614
+    },
+    {
+      "eps": 2.0,
+      "min_samples": 25,
+      "n_clusters": 2,
+      "n_noise": 757,
+      "noise_ratio": 0.0757,
+      "silhouette_score": 0.3173196395821166,
+      "davies_bouldin": 0.9961858640466185,
+      "calinski_harabasz": 2314.205451307167
     }
   ],
   "kmeans_centroids": [
     [
-      0.4111640072445069,
-      0.1755012185257558,
-      -0.6217576606332926,
-      -1.243758441991791,
-      -0.654916226420487,
-      -0.12556062632114956,
-      1.6927068985866698,
-      0.3857710704196287,
-      0.06274568143488936,
-      0.009505703422052925,
-      0.5788973384030422,
-      0.41159695817490494,
-      0.49524714828897337,
-      0.46768060836501907,
-      0.037072243346007616
+      0.2998456665766962,
+      0.05863138433313218,
+      -0.8471336057613494,
+      -1.2621973008335146,
+      -0.7527922862488049,
+      -0.09602305623631878,
+      1.614650073468616,
+      0.15744027142124678,
+      -0.021846087627793807,
+      0.017428725121035882,
+      0.5800968262506752,
+      0.402474448628294,
+      0.5136094674556213,
+      0.45508337816030126,
+      0.031307154384077385
     ],
     [
-      -0.5261737572979827,
-      0.5017195724850401,
-      0.5978096391389442,
-      0.23547746977598832,
-      0.823437076540227,
-      0.7950520202049829,
-      -0.6016703365941846,
-      -0.48102586830208416,
-      -0.68203912694718,
-      0.06329735034347365,
-      0.49754661432777264,
-      0.43915603532875375,
-      0.5014720314033366,
-      0.4685966633954859,
-      0.029931305201177642
+      -0.6195602095385558,
+      0.3693116921275379,
+      0.40128719266265667,
+      0.12688050045535207,
+      0.6999086860649929,
+      0.7720313718166432,
+      -0.6087208626633578,
+      -0.538414712811766,
+      -0.7514546891495151,
+      0.06844414766765623,
+      0.5068205666316924,
+      0.4247352857006576,
+      0.5113517122960982,
+      0.4582657636172852,
+      0.030382524086616396
     ],
     [
-      1.2928296877601735,
-      0.3354767000887224,
-      0.6528102242703971,
-      0.5340092923371631,
-      0.04648950204304784,
-      -1.405193495989028,
-      -0.07426063306400776,
-      1.1902659566412037,
-      1.62135240665658,
-      0.405358686257563,
-      0.04494382022471893,
-      0.5496974935177183,
-      0.5185825410544511,
-      0.4433880726015559,
-      0.03802938634399311
+      1.1116912433976691,
+      0.27828160587362055,
+      0.6466418211107432,
+      0.5711856727618088,
+      -0.01930188796735011,
+      -1.1140466077874365,
+      0.06540764432555218,
+      1.008859605294544,
+      1.3618504317035716,
+      0.3221512970256677,
+      0.15251935352438256,
+      0.5253293494499508,
+      0.5101860654624473,
+      0.45857666711938067,
+      0.03123726741817196
     ],
     [
-      -1.1367946440723142,
-      -2.118563496170328,
-      -1.752388333412742,
-      0.2797902341803501,
-      -1.385101255854504,
-      0.1827126647694546,
-      -0.6223160144477721,
-      -1.0659205289716795,
-      -0.7329581017965653,
-      0.17264276228419656,
-      0.5232403718459495,
-      0.304116865869854,
-      0.4780876494023904,
-      0.4900398406374503,
-      0.03187250996015936
+      -1.2304271629601207,
+      -2.4707645287487323,
+      -2.0071270443826688,
+      0.13179076832439304,
+      -1.4747340133948625,
+      0.22173846249483892,
+      -0.6401204461657516,
+      -1.0036846203104821,
+      -0.8171855296344903,
+      0.19868342309993975,
+      0.4969080390983437,
+      0.3044085378017153,
+      0.5202473568721323,
+      0.4494314781567924,
+      0.03032116497107516
     ]
   ],
   "pca_metadata": {
     "variance_explained_per_component": [
-      0.3531,
-      0.2624,
-      0.1479
+      0.3367,
+      0.2455,
+      0.137
     ],
-    "total_variance_explained": 0.7633
+    "total_variance_explained": 0.7191
   },
   "benchmark_comparison": [
     {
       "Algorithm": "K-Means Clustering",
       "Clusters": 4,
       "Outliers/Noise": 0,
-      "Silhouette_Score": 0.4199,
-      "Davies_Bouldin_Index": 0.9418,
-      "Calinski_Harabasz_Index": 2992.42
+      "Silhouette_Score": 0.3733,
+      "Davies_Bouldin_Index": 1.0427,
+      "Calinski_Harabasz_Index": 22031.26
     },
     {
       "Algorithm": "Hierarchical Agglomerative",
       "Clusters": 4,
       "Outliers/Noise": 0,
-      "Silhouette_Score": 0.4137,
-      "Davies_Bouldin_Index": 0.9612,
-      "Calinski_Harabasz_Index": 2901.73
-    },
-    {
-      "Algorithm": "DBSCAN (Density-Based)",
-      "Clusters": 2,
-      "Outliers/Noise": 307,
-      "Silhouette_Score": 0.3111,
-      "Davies_Bouldin_Index": 1.0534,
-      "Calinski_Harabasz_Index": 1470.55
+      "Silhouette_Score": 0.3733,
+      "Davies_Bouldin_Index": 1.0462,
+      "Calinski_Harabasz_Index": 22014.72
     },
     {
       "Algorithm": "Gaussian Mixture Model (GMM)",
       "Clusters": 4,
       "Outliers/Noise": 0,
-      "Silhouette_Score": 0.2945,
-      "Davies_Bouldin_Index": 1.462,
-      "Calinski_Harabasz_Index": 1800.33
+      "Silhouette_Score": 0.3571,
+      "Davies_Bouldin_Index": 1.0802,
+      "Calinski_Harabasz_Index": 20553.14
+    },
+    {
+      "Algorithm": "DBSCAN (Density-Based)",
+      "Clusters": 2,
+      "Outliers/Noise": 5998,
+      "Silhouette_Score": 0.3237,
+      "Davies_Bouldin_Index": 0.9981,
+      "Calinski_Harabasz_Index": 11400.47
     }
   ],
   "persona_summary": {
-    "total_customers": 5000,
-    "total_revenue": 19969565.95,
+    "total_customers": 50000,
+    "total_revenue": 273139433.12,
     "cluster_labels_map": {
-      "0": "\ud83c\udff7\ufe0f Bargain Hunters",
-      "1": "\ud83d\udc8e Steady Loyalists",
-      "2": "\u26a0\ufe0f At-Risk / Hibernating",
-      "3": "\ud83c\udf31 New Potential Loyalists"
+      "0": "Bargain Hunters",
+      "1": "VIP Champions",
+      "2": "At-Risk / Hibernating",
+      "3": "New Potential Loyalists"
     },
     "clusters": [
       {
         "cluster_id": 0,
         "persona_key": "BARGAIN",
-        "persona_title": "\ud83c\udff7\ufe0f Bargain Hunters",
+        "persona_title": "Bargain Hunters",
         "tagline": "Discount-Driven & Price Sensitive",
         "description": "Customers who buy primarily during promotional sales and clearance events with high discount usage.",
         "strategy": "Target with seasonal clearance alerts, bundle discount offers, and flash sales without eroding margin.",
         "color": "#F59E0B",
         "icon": "tag",
         "metrics": {
-          "customer_count": 1052,
-          "customer_percentage": 21.04,
-          "total_revenue": 1175182.43,
-          "revenue_percentage": 5.88,
-          "avg_recency_days": 86.3,
-          "avg_frequency_orders": 31.3,
-          "avg_monetary_spend": 1117.09,
-          "avg_order_value": 40.49,
+          "customer_count": 9295,
+          "customer_percentage": 18.59,
+          "total_revenue": 11418020.49,
+          "revenue_percentage": 4.18,
+          "avg_recency_days": 88.7,
+          "avg_frequency_orders": 34.3,
+          "avg_monetary_spend": 1228.4,
+          "avg_order_value": 40.69,
           "avg_engagement_score": 57.7,
-          "avg_discount_ratio": 0.81,
-          "avg_churn_risk": 0.294
+          "avg_discount_ratio": 0.8,
+          "avg_churn_risk": 0.288
         }
       },
       {
         "cluster_id": 1,
-        "persona_key": "LOYALIST",
-        "persona_title": "\ud83d\udc8e Steady Loyalists",
-        "tagline": "Consistent Purchasers & High Lifetime Value Potential",
-        "description": "Regular customers with reliable ordering patterns and solid order value.",
-        "strategy": "Implement cross-sell & up-sell recommendations, tier-upgrade incentives, and loyalty points accelerators.",
-        "color": "#3B82F6",
-        "icon": "shield-check",
+        "persona_key": "CHAMPION",
+        "persona_title": "VIP Champions",
+        "tagline": "High Spend, High Frequency & Exceptional Loyalty",
+        "description": "Your top-tier customers who buy frequently, spend the most, and actively engage with your brand.",
+        "strategy": "Provide VIP concierge support, early access to new product lines, exclusive rewards, and brand ambassador opportunities.",
+        "color": "#10B981",
+        "icon": "crown",
         "metrics": {
-          "customer_count": 2038,
-          "customer_percentage": 40.76,
-          "total_revenue": 12126663.59,
-          "revenue_percentage": 60.73,
-          "avg_recency_days": 28.3,
-          "avg_frequency_orders": 46.0,
-          "avg_monetary_spend": 5950.28,
-          "avg_order_value": 140.41,
+          "customer_count": 20964,
+          "customer_percentage": 41.93,
+          "total_revenue": 134144407.45,
+          "revenue_percentage": 49.11,
+          "avg_recency_days": 30.2,
+          "avg_frequency_orders": 47.1,
+          "avg_monetary_spend": 6398.8,
+          "avg_order_value": 148.38,
           "avg_engagement_score": 77.9,
-          "avg_discount_ratio": 0.23,
-          "avg_churn_risk": 0.131
+          "avg_discount_ratio": 0.24,
+          "avg_churn_risk": 0.132
         }
       },
       {
         "cluster_id": 2,
         "persona_key": "AT_RISK",
-        "persona_title": "\u26a0\ufe0f At-Risk / Hibernating",
+        "persona_title": "At-Risk / Hibernating",
         "tagline": "High Past Value, but Prolonged Inactivity",
         "description": "Previously valuable customers who have not made a purchase recently and show high churn risk.",
         "strategy": "Launch win-back email drip campaigns, personalized re-engagement discounts, and feedback surveys.",
         "color": "#EF4444",
         "icon": "alert-triangle",
         "metrics": {
-          "customer_count": 1157,
-          "customer_percentage": 23.14,
-          "total_revenue": 6459733.68,
-          "revenue_percentage": 32.35,
-          "avg_recency_days": 235.0,
-          "avg_frequency_orders": 37.4,
-          "avg_monetary_spend": 5583.18,
-          "avg_order_value": 199.19,
-          "avg_engagement_score": 29.6,
-          "avg_discount_ratio": 0.37,
-          "avg_churn_risk": 0.636
+          "customer_count": 14728,
+          "customer_percentage": 29.46,
+          "total_revenue": 126268284.7,
+          "revenue_percentage": 46.23,
+          "avg_recency_days": 227.3,
+          "avg_frequency_orders": 45.3,
+          "avg_monetary_spend": 8573.35,
+          "avg_order_value": 349.86,
+          "avg_engagement_score": 34.0,
+          "avg_discount_ratio": 0.41,
+          "avg_churn_risk": 0.586
         }
       },
       {
         "cluster_id": 3,
         "persona_key": "NEW_BUYER",
-        "persona_title": "\ud83c\udf31 New Potential Loyalists",
+        "persona_title": "New Potential Loyalists",
         "tagline": "Recent First-Time Buyers with Growth Trajectory",
         "description": "Recent buyers with low transaction count but promising initial engagement metrics.",
         "strategy": "Deliver engaging onboarding series, product education guides, and second-purchase discount incentives.",
         "color": "#8B5CF6",
         "icon": "sparkles",
         "metrics": {
-          "customer_count": 753,
-          "customer_percentage": 15.06,
-          "total_revenue": 207986.25,
-          "revenue_percentage": 1.04,
-          "avg_recency_days": 12.2,
+          "customer_count": 5013,
+          "customer_percentage": 10.03,
+          "total_revenue": 1308720.49,
+          "revenue_percentage": 0.48,
+          "avg_recency_days": 12.6,
           "avg_frequency_orders": 2.0,
-          "avg_monetary_spend": 276.21,
-          "avg_order_value": 158.87,
-          "avg_engagement_score": 64.5,
+          "avg_monetary_spend": 261.07,
+          "avg_order_value": 156.89,
+          "avg_engagement_score": 65.1,
           "avg_discount_ratio": 0.23,
-          "avg_churn_risk": 0.12
+          "avg_churn_risk": 0.117
         }
       }
     ]
+  },
+  "segment_explanations": [
+    {
+      "cluster_id": 0,
+      "sample_size": 9295,
+      "top_drivers": [
+        {
+          "feature": "Discount_Ratio",
+          "direction": "above average",
+          "strength": 1.615,
+          "cluster_average": 0.803,
+          "global_average": 0.391
+        },
+        {
+          "feature": "Monetary_Spend",
+          "direction": "below average",
+          "strength": 0.769,
+          "cluster_average": 1228.405,
+          "global_average": 5462.789
+        },
+        {
+          "feature": "Category_Diversity",
+          "direction": "below average",
+          "strength": 0.753,
+          "cluster_average": 3.081,
+          "global_average": 4.719
+        },
+        {
+          "feature": "Avg_Order_Value",
+          "direction": "below average",
+          "strength": 0.244,
+          "cluster_average": 40.691,
+          "global_average": 188.563
+        }
+      ],
+      "plain_english": "This segment is mainly defined by Discount Ratio is above average, Monetary Spend is below average, Category Diversity is below average."
+    },
+    {
+      "cluster_id": 1,
+      "sample_size": 20964,
+      "top_drivers": [
+        {
+          "feature": "Engagement_Score",
+          "direction": "above average",
+          "strength": 0.772,
+          "cluster_average": 77.899,
+          "global_average": 59.917
+        },
+        {
+          "feature": "Churn_Risk_Index",
+          "direction": "below average",
+          "strength": 0.752,
+          "cluster_average": 0.132,
+          "global_average": 0.293
+        },
+        {
+          "feature": "Category_Diversity",
+          "direction": "above average",
+          "strength": 0.7,
+          "cluster_average": 6.243,
+          "global_average": 4.719
+        },
+        {
+          "feature": "Recency_Days",
+          "direction": "below average",
+          "strength": 0.652,
+          "cluster_average": 30.185,
+          "global_average": 97.361
+        }
+      ],
+      "plain_english": "This segment is mainly defined by Engagement Score is above average, Churn Risk Index is below average, Category Diversity is above average."
+    },
+    {
+      "cluster_id": 2,
+      "sample_size": 14728,
+      "top_drivers": [
+        {
+          "feature": "Churn_Risk_Index",
+          "direction": "above average",
+          "strength": 1.362,
+          "cluster_average": 0.586,
+          "global_average": 0.293
+        },
+        {
+          "feature": "Recency_Days",
+          "direction": "above average",
+          "strength": 1.261,
+          "cluster_average": 227.306,
+          "global_average": 97.361
+        },
+        {
+          "feature": "Engagement_Score",
+          "direction": "below average",
+          "strength": 1.114,
+          "cluster_average": 33.974,
+          "global_average": 59.917
+        },
+        {
+          "feature": "Return_Rate",
+          "direction": "above average",
+          "strength": 1.009,
+          "cluster_average": 0.188,
+          "global_average": 0.106
+        }
+      ],
+      "plain_english": "This segment is mainly defined by Churn Risk Index is above average, Recency Days is above average, Engagement Score is below average."
+    },
+    {
+      "cluster_id": 3,
+      "sample_size": 5013,
+      "top_drivers": [
+        {
+          "feature": "Category_Diversity",
+          "direction": "below average",
+          "strength": 1.475,
+          "cluster_average": 1.509,
+          "global_average": 4.719
+        },
+        {
+          "feature": "Frequency_Orders",
+          "direction": "below average",
+          "strength": 1.414,
+          "cluster_average": 2.016,
+          "global_average": 39.658
+        },
+        {
+          "feature": "Return_Rate",
+          "direction": "below average",
+          "strength": 1.004,
+          "cluster_average": 0.025,
+          "global_average": 0.106
+        },
+        {
+          "feature": "Monetary_Spend",
+          "direction": "below average",
+          "strength": 0.945,
+          "cluster_average": 261.065,
+          "global_average": 5462.789
+        }
+      ],
+      "plain_english": "This segment is mainly defined by Category Diversity is below average, Frequency Orders is below average, Return Rate is below average."
+    }
+  ],
+  "campaign_recommendations": [
+    {
+      "cluster_id": 2,
+      "persona_title": "At-Risk / Hibernating",
+      "priority_score": 47.21,
+      "expected_revenue_at_risk": 73984768.37,
+      "recommended_campaign": "Win-back sequence with personalized discount, feedback survey, and support outreach.",
+      "success_metric": "Reactivation rate and retained revenue",
+      "estimated_audience": 14728
+    },
+    {
+      "cluster_id": 1,
+      "persona_title": "VIP Champions",
+      "priority_score": 35.11,
+      "expected_revenue_at_risk": 17652504.35,
+      "recommended_campaign": "VIP retention program with early access, premium bundles, and referral incentives.",
+      "success_metric": "Repeat purchase rate and referral revenue",
+      "estimated_audience": 20964
+    },
+    {
+      "cluster_id": 0,
+      "persona_title": "Bargain Hunters",
+      "priority_score": 15.68,
+      "expected_revenue_at_risk": 3293823.87,
+      "recommended_campaign": "Margin-aware flash sale targeting with bundles instead of blanket discounts.",
+      "success_metric": "Gross margin per campaign recipient",
+      "estimated_audience": 9295
+    },
+    {
+      "cluster_id": 3,
+      "persona_title": "New Potential Loyalists",
+      "priority_score": 6.32,
+      "expected_revenue_at_risk": 153744.95,
+      "recommended_campaign": "Second-purchase onboarding journey with education, recommendations, and welcome credit.",
+      "success_metric": "Second purchase conversion rate",
+      "estimated_audience": 5013
+    }
+  ],
+  "anomaly_summary": {
+    "count": 5998,
+    "percentage": 12.0,
+    "interpretation": "DBSCAN is used as a risk and anomaly layer, while K-Means remains the production segmentation model.",
+    "customers": [
+      {
+        "customer_id": "CUST-43181",
+        "severity": 0.947,
+        "monetary_spend": 24505.17,
+        "return_rate": 0.383,
+        "discount_ratio": 0.907,
+        "churn_risk_index": 0.761
+      },
+      {
+        "customer_id": "CUST-52519",
+        "severity": 0.946,
+        "monetary_spend": 24650.99,
+        "return_rate": 0.346,
+        "discount_ratio": 0.997,
+        "churn_risk_index": 0.783
+      },
+      {
+        "customer_id": "CUST-24354",
+        "severity": 0.94,
+        "monetary_spend": 22952.86,
+        "return_rate": 0.387,
+        "discount_ratio": 0.921,
+        "churn_risk_index": 0.891
+      },
+      {
+        "customer_id": "CUST-18842",
+        "severity": 0.934,
+        "monetary_spend": 24943.48,
+        "return_rate": 0.35,
+        "discount_ratio": 0.892,
+        "churn_risk_index": 0.876
+      },
+      {
+        "customer_id": "CUST-48525",
+        "severity": 0.932,
+        "monetary_spend": 22367.76,
+        "return_rate": 0.368,
+        "discount_ratio": 0.984,
+        "churn_risk_index": 0.947
+      },
+      {
+        "customer_id": "CUST-26180",
+        "severity": 0.931,
+        "monetary_spend": 23928.47,
+        "return_rate": 0.391,
+        "discount_ratio": 0.842,
+        "churn_risk_index": 0.768
+      },
+      {
+        "customer_id": "CUST-20725",
+        "severity": 0.931,
+        "monetary_spend": 23934.04,
+        "return_rate": 0.396,
+        "discount_ratio": 0.951,
+        "churn_risk_index": 0.638
+      },
+      {
+        "customer_id": "CUST-31378",
+        "severity": 0.929,
+        "monetary_spend": 22243.21,
+        "return_rate": 0.395,
+        "discount_ratio": 0.922,
+        "churn_risk_index": 0.769
+      },
+      {
+        "customer_id": "CUST-29072",
+        "severity": 0.929,
+        "monetary_spend": 24892.09,
+        "return_rate": 0.337,
+        "discount_ratio": 0.987,
+        "churn_risk_index": 0.712
+      },
+      {
+        "customer_id": "CUST-35720",
+        "severity": 0.922,
+        "monetary_spend": 23940.19,
+        "return_rate": 0.385,
+        "discount_ratio": 0.907,
+        "churn_risk_index": 0.673
+      },
+      {
+        "customer_id": "CUST-23425",
+        "severity": 0.917,
+        "monetary_spend": 24218.71,
+        "return_rate": 0.396,
+        "discount_ratio": 0.915,
+        "churn_risk_index": 0.614
+      },
+      {
+        "customer_id": "CUST-40604",
+        "severity": 0.908,
+        "monetary_spend": 24913.22,
+        "return_rate": 0.347,
+        "discount_ratio": 0.91,
+        "churn_risk_index": 0.673
+      },
+      {
+        "customer_id": "CUST-19145",
+        "severity": 0.906,
+        "monetary_spend": 23177.02,
+        "return_rate": 0.339,
+        "discount_ratio": 0.998,
+        "churn_risk_index": 0.698
+      },
+      {
+        "customer_id": "CUST-28718",
+        "severity": 0.9,
+        "monetary_spend": 23934.58,
+        "return_rate": 0.392,
+        "discount_ratio": 0.863,
+        "churn_risk_index": 0.618
+      },
+      {
+        "customer_id": "CUST-59292",
+        "severity": 0.894,
+        "monetary_spend": 20710.36,
+        "return_rate": 0.389,
+        "discount_ratio": 0.963,
+        "churn_risk_index": 0.685
+      },
+      {
+        "customer_id": "CUST-55436",
+        "severity": 0.888,
+        "monetary_spend": 24809.26,
+        "return_rate": 0.323,
+        "discount_ratio": 0.8,
+        "churn_risk_index": 0.819
+      },
+      {
+        "customer_id": "CUST-13004",
+        "severity": 0.886,
+        "monetary_spend": 24531.77,
+        "return_rate": 0.339,
+        "discount_ratio": 0.853,
+        "churn_risk_index": 0.684
+      },
+      {
+        "customer_id": "CUST-57014",
+        "severity": 0.881,
+        "monetary_spend": 19639.53,
+        "return_rate": 0.396,
+        "discount_ratio": 0.935,
+        "churn_risk_index": 0.698
+      },
+      {
+        "customer_id": "CUST-33293",
+        "severity": 0.876,
+        "monetary_spend": 23725.4,
+        "return_rate": 0.381,
+        "discount_ratio": 0.597,
+        "churn_risk_index": 0.887
+      },
+      {
+        "customer_id": "CUST-36420",
+        "severity": 0.876,
+        "monetary_spend": 24752.02,
+        "return_rate": 0.397,
+        "discount_ratio": 0.66,
+        "churn_risk_index": 0.632
+      },
+      {
+        "customer_id": "CUST-21375",
+        "severity": 0.875,
+        "monetary_spend": 22940.61,
+        "return_rate": 0.37,
+        "discount_ratio": 0.694,
+        "churn_risk_index": 0.891
+      },
+      {
+        "customer_id": "CUST-11088",
+        "severity": 0.874,
+        "monetary_spend": 24906.69,
+        "return_rate": 0.353,
+        "discount_ratio": 0.945,
+        "churn_risk_index": 0.549
+      },
+      {
+        "customer_id": "CUST-34896",
+        "severity": 0.872,
+        "monetary_spend": 23262.86,
+        "return_rate": 0.395,
+        "discount_ratio": 0.583,
+        "churn_risk_index": 0.78
+      },
+      {
+        "customer_id": "CUST-33455",
+        "severity": 0.871,
+        "monetary_spend": 21503.13,
+        "return_rate": 0.354,
+        "discount_ratio": 0.85,
+        "churn_risk_index": 0.787
+      },
+      {
+        "customer_id": "CUST-44896",
+        "severity": 0.871,
+        "monetary_spend": 23442.04,
+        "return_rate": 0.389,
+        "discount_ratio": 0.565,
+        "churn_risk_index": 0.83
+      }
+    ]
+  },
+  "stability_report": {
+    "method": "Adjusted Rand Index across repeated train/test resamples",
+    "runs": 5,
+    "mean_adjusted_rand_index": 0.9964,
+    "min_adjusted_rand_index": 0.9945,
+    "max_adjusted_rand_index": 0.9973,
+    "interpretation": "Scores closer to 1.0 indicate stable, reproducible customer segments."
   }
 }

@@ -25,7 +25,8 @@ class ModelBenchmarkEvaluator:
             valid_mask = labels != -1 if -1 in labels else np.ones(len(labels), dtype=bool)
             
             if n_clusters > 1 and np.sum(valid_mask) > n_clusters:
-                sil = float(silhouette_score(X[valid_mask], labels[valid_mask]))
+                sample_sz = 10000 if np.sum(valid_mask) > 10000 else None
+                sil = float(silhouette_score(X[valid_mask], labels[valid_mask], sample_size=sample_sz, random_state=42))
                 db = float(davies_bouldin_score(X[valid_mask], labels[valid_mask]))
                 ch = float(calinski_harabasz_score(X[valid_mask], labels[valid_mask]))
             else:

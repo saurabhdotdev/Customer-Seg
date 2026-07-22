@@ -14,18 +14,28 @@ class HierarchicalSegmentationModel:
 
     def fit(self, X: np.ndarray):
         """
-        Fits Agglomerative Clustering on dataset X.
+        Fits Agglomerative Clustering on dataset X with sub-sampling optimization for large N.
         """
-        self.model = AgglomerativeClustering(n_clusters=self.n_clusters, linkage=self.linkage)
-        self.labels_ = self.model.fit_predict(X)
+        if len(X) > 10000:
+            rng = np.random.RandomState(42)
+            indices = rng.choice(len(X), size=10000, replace=False)
+            X_sub = X[indices]
+            sub_model = AgglomerativeClustering(n_clusters=self.n_clusters, linkage=self.linkage)
+            sub_labels = sub_model.fit_predict(X_sub)
+            self.labels_ = self.predict_nearest_cluster(X, X_sub, sub_labels)
+            self.model = sub_model
+        else:
+            self.model = AgglomerativeClustering(n_clusters=self.n_clusters, linkage=self.linkage)
+            self.labels_ = self.model.fit_predict(X)
         return self
 
-    def predict_nearest_cluster(self, X_sample: np.ndarray, X_train: np.ndarray) -> np.ndarray:
+    def predict_nearest_cluster(self, X_sample: np.ndarray, X_train: np.ndarray, train_labels: np.ndarray = None) -> np.ndarray:
         """
         Assigns new points to the nearest cluster centroid of fitted train matrix.
         """
-        unique_labels = set(self.labels_)
-        centroids = {l: X_train[self.labels_ == l].mean(axis=0) for l in unique_labels}
+        labels = self.labels_ if train_labels is None else train_labels
+        unique_labels = set(labels)
+        centroids = {l: X_train[labels == l].mean(axis=0) for l in unique_labels}
         
         predictions = []
         for x in X_sample:
