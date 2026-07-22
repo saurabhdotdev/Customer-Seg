@@ -31,6 +31,9 @@ class PredictionResponseSchema(BaseModel):
     icon: str
     churn_risk_index: float
     is_anomaly: bool
+    anomaly_score: Optional[float] = 0.0
+    anomaly_type: Optional[str] = "Normal Pattern"
+    churn_explainability: Optional[Dict[str, Any]] = None
     pca_coordinates: List[float]
     metrics_summary: Dict[str, Any]
 

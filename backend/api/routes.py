@@ -688,8 +688,6 @@ def predict_customer_segment(customer_input: CustomerInputSchema):
     )
     churn_risk = round(float(min(1.0, max(0.0, raw_churn))), 3)
 
-    is_anomaly = bool(customer_input.Support_Tickets >= 8 or customer_input.Return_Rate >= 0.25 or customer_input.Discount_Ratio >= 0.90)
-
     predicted_ltv = round(float(customer_input.Monetary_Spend * 1.4), 2)
     if os.path.exists(ltv_file):
         try:
@@ -697,6 +695,14 @@ def predict_customer_segment(customer_input: CustomerInputSchema):
             predicted_ltv = round(float(ltv_model.predict(X_single)[0]), 2)
         except Exception:
             pass
+
+    from src.models.explainability import ChurnExplainabilityEngine
+    explainability = ChurnExplainabilityEngine.explain_customer(input_dict, churn_risk)
+
+    from src.models.anomaly_detector import CustomerAnomalyDetector
+    anomaly_file = os.path.join(os.path.dirname(kmeans_file) if os.path.exists(kmeans_file) else "models_saved", "anomaly_detector.joblib")
+    anomaly_detector = CustomerAnomalyDetector()
+    anomaly_result = anomaly_detector.predict_single(input_dict, model_path=anomaly_file)
 
     return {
         "predicted_cluster": predicted_cluster,
@@ -710,7 +716,10 @@ def predict_customer_segment(customer_input: CustomerInputSchema):
         "color": target_persona['color'],
         "icon": target_persona['icon'],
         "churn_risk_index": churn_risk,
-        "is_anomaly": is_anomaly,
+        "is_anomaly": anomaly_result["is_anomaly"],
+        "anomaly_score": anomaly_result["anomaly_score"],
+        "anomaly_type": anomaly_result["anomaly_type"],
+        "churn_explainability": explainability,
         "pca_coordinates": pca_coord,
         "metrics_summary": target_persona['metrics']
     }

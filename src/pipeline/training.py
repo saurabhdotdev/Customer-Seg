@@ -288,6 +288,12 @@ def train_customer_segmentation_pipeline(
     ]]
     feature_importances = classifier.get_feature_importances(feature_names)
 
+    from src.models.anomaly_detector import CustomerAnomalyDetector
+    anomaly_detector = CustomerAnomalyDetector(contamination=0.03)
+    df_processed = anomaly_detector.fit_predict(df_processed)
+    anomaly_target = os.path.join(os.path.dirname(kmeans_target), "anomaly_detector.joblib")
+    anomaly_detector.save(anomaly_target)
+
     models_dict = {
         "K-Means Clustering": kmeans,
         "Gaussian Mixture Model (GMM)": gmm,
@@ -306,13 +312,19 @@ def train_customer_segmentation_pipeline(
         "optimal_k": int(optimal_k),
         "production_model": "K-Means Clustering",
         "realtime_classifier": "RandomForestClassifier",
-        "anomaly_model": "DBSCAN (Density-Based)",
+        "anomaly_model": "IsolationForest Anomaly Detector",
+        "anomaly_summary": {
+            "count": int(df_processed["Is_Anomaly"].sum()),
+            "percentage": round(float(df_processed["Is_Anomaly"].mean() * 100), 2),
+            "types_breakdown": df_processed[df_processed["Is_Anomaly"]]["Anomaly_Type"].value_counts().to_dict()
+        },
         "classifier_metrics": classifier_eval,
         "classifier_feature_importances": feature_importances,
         "model_artifacts": {
             "preprocessing_pipeline": scaler_target,
             "kmeans_model": kmeans_target,
             "classifier_model": classifier_target,
+            "anomaly_model": anomaly_target,
             "pca_model": pca_target,
         },
         "k_search_grid": k_search["grid_search"],

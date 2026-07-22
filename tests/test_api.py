@@ -54,6 +54,7 @@ def test_api_visualization_pca3d_endpoint():
     assert data["count"] > 0
 
 def test_api_predict_endpoint():
+    headers = get_test_auth_headers()
     payload = {
         "Recency_Days": 10,
         "Frequency_Orders": 50,
@@ -67,7 +68,7 @@ def test_api_predict_endpoint():
         "Preferred_Channel": "Mobile App",
         "Gender": "Female"
     }
-    response = client.post("/api/predict", json=payload)
+    response = client.post("/api/predict", json=payload, headers=headers)
     assert response.status_code == 200
     data = response.json()
     assert "predicted_cluster" in data
@@ -75,6 +76,9 @@ def test_api_predict_endpoint():
     assert "persona_title" in data
     assert "churn_risk_index" in data
     assert "is_anomaly" in data
+    assert "anomaly_score" in data
+    assert "anomaly_type" in data
+    assert "churn_explainability" in data
 
 def test_api_generate_campaign_copy_endpoint():
     payload = {

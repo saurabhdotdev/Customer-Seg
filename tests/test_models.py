@@ -70,3 +70,37 @@ def test_customer_ltv_regressor():
     preds = ltv_reg.predict(X_scaled[:10])
     assert len(preds) == 10
     assert (preds >= 0).all()
+
+def test_anomaly_detector_fit_predict():
+    from src.models.anomaly_detector import CustomerAnomalyDetector
+    df = generate_customer_dataset(n_samples=300, random_state=42)
+    detector = CustomerAnomalyDetector(contamination=0.05, random_state=42)
+    df_out = detector.fit_predict(df)
+    
+    assert "Is_Anomaly" in df_out.columns
+    assert "Anomaly_Score" in df_out.columns
+    assert "Anomaly_Type" in df_out.columns
+    assert len(df_out) == 300
+    assert df_out["Is_Anomaly"].sum() >= 1
+
+    single_res = detector.predict_single({
+        "Recency_Days": 10, "Frequency_Orders": 100, "Monetary_Spend": 25000.0,
+        "Category_Diversity": 10, "Engagement_Score": 99.0, "Support_Tickets": 0,
+        "Discount_Ratio": 0.05, "Return_Rate": 0.01
+    })
+    assert "is_anomaly" in single_res
+    assert "anomaly_score" in single_res
+    assert "anomaly_type" in single_res
+
+def test_churn_explainability_engine():
+    from src.models.explainability import ChurnExplainabilityEngine
+    input_dict = {
+        "Recency_Days": 120, "Frequency_Orders": 2, "Monetary_Spend": 150.0,
+        "Category_Diversity": 1, "Engagement_Score": 15.0, "Support_Tickets": 6,
+        "Discount_Ratio": 0.40, "Return_Rate": 0.25
+    }
+    exp = ChurnExplainabilityEngine.explain_customer(input_dict, churn_score=0.85)
+    
+    assert exp["overall_churn_risk"] == 0.85
+    assert len(exp["top_churn_risk_drivers"]) >= 1
+    assert "summary_explanation" in exp

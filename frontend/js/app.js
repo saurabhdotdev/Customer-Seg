@@ -704,32 +704,62 @@ async function runSandboxSimulation(data) {
         if (res.ok) {
             const pred = await res.json();
             
-            let explanationText = "";
-            if (pred.persona_key === 'CHAMPION') {
-                explanationText = `High Monetary Spend ($${data.spend.toLocaleString()}) combined with active Recency (${data.recency} days) and high Frequency (${data.frequency} orders) placed this customer in the top tier (VIP Champions).`;
-            } else if (pred.persona_key === 'BARGAIN') {
-                explanationText = `High Discount Ratio (${(data.discount * 100).toFixed(0)}%) with moderate spend ($${data.spend.toLocaleString()}) classified this customer as price-sensitive (Bargain Hunters).`;
-            } else if (pred.persona_key === 'AT_RISK') {
-                explanationText = `High Recency Gap (${data.recency} days without visiting) and low Engagement (${data.engagement}%) triggered elevated Churn Risk (${(pred.churn_risk_index * 100).toFixed(1)}%).`;
-            } else {
-                explanationText = `Recent onboarding (${data.recency} days) and initial spend ($${data.spend.toLocaleString()}) classified this customer into New Potential Loyalists.`;
+            let explanationText = pred.churn_explainability ? pred.churn_explainability.summary_explanation : "";
+            if (!explanationText) {
+                if (pred.persona_key === 'CHAMPION') {
+                    explanationText = `High Monetary Spend ($${data.spend.toLocaleString()}) combined with active Recency (${data.recency} days) and high Frequency (${data.frequency} orders) placed this customer in VIP Champions.`;
+                } else if (pred.persona_key === 'BARGAIN') {
+                    explanationText = `High Discount Ratio (${(data.discount * 100).toFixed(0)}%) classified this customer into Bargain Hunters.`;
+                } else {
+                    explanationText = `Customer classified into ${pred.persona_title} with ${(pred.confidence_score * 100).toFixed(0)}% confidence score.`;
+                }
+            }
+
+            const anomalyBadge = pred.is_anomaly
+                ? `<span class="pill-badge" style="background:rgba(239,68,68,0.25); border:1px solid #EF4444; color:#EF4444; font-weight:800;"><i class="fa-solid fa-triangle-exclamation"></i> Outlier: ${pred.anomaly_type || 'Anomaly'} (Score: ${pred.anomaly_score})</span>`
+                : `<span class="pill-badge" style="background:rgba(16,185,129,0.2); border:1px solid #10B981; color:#10B981; font-weight:700;"><i class="fa-solid fa-circle-check"></i> Normal Behavioral Pattern</span>`;
+
+            let driversHtml = "";
+            if (pred.churn_explainability && pred.churn_explainability.all_features_breakdown) {
+                const drivers = pred.churn_explainability.all_features_breakdown.slice(0, 4);
+                driversHtml = drivers.map(d => {
+                    const isRisk = d.direction === 'increases_churn';
+                    const barColor = isRisk ? '#EF4444' : '#10B981';
+                    return `
+                        <div style="margin-bottom:6px;">
+                            <div style="display:flex; justify-content:space-between; font-size:11px; color:#CBD5E1; margin-bottom:2px;">
+                                <span>${d.display_name} (${d.value})</span>
+                                <span style="color:${barColor}; font-weight:700;">${isRisk ? '+' : '-'}${d.importance_pct}% Impact</span>
+                            </div>
+                            <div style="background:rgba(255,255,255,0.06); height:5px; border-radius:4px; overflow:hidden;">
+                                <div style="width:${Math.min(100, d.importance_pct)}%; height:100%; background:${barColor}; border-radius:4px;"></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
             }
 
             resultBox.innerHTML = `
                 <div style="background:rgba(255,255,255,0.04); border:1px solid ${pred.color}60; border-radius:14px; padding:20px; box-shadow:0 8px 24px rgba(0,0,0,0.3);">
-                    <div style="display:flex; align-items:center; gap:14px; margin-bottom:14px;">
-                        <div style="width:44px; height:44px; background:${pred.color}; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; color:#FFF;">
-                            <i class="fa-solid fa-${pred.icon}"></i>
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <div style="width:44px; height:44px; background:${pred.color}; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; color:#FFF;">
+                                <i class="fa-solid fa-${pred.icon}"></i>
+                            </div>
+                            <div>
+                                <h4 style="font-size:18px; font-weight:800; color:#FFF; margin:0;">${pred.persona_title}</h4>
+                                <span class="pill-badge" style="background:${pred.color}25; color:${pred.color}; font-weight:700;">Confidence: ${(pred.confidence_score * 100).toFixed(0)}%</span>
+                            </div>
                         </div>
                         <div>
-                            <h4 style="font-size:18px; font-weight:800; color:#FFF;">${pred.persona_title}</h4>
-                            <span class="pill-badge" style="background:${pred.color}25; color:${pred.color}; font-weight:700;">Confidence: ${(pred.confidence_score * 100).toFixed(0)}%</span>
+                            ${anomalyBadge}
                         </div>
                     </div>
 
                     <div style="background:rgba(0,0,0,0.3); border-radius:10px; padding:12px; margin-bottom:14px; font-size:13px; color:#E2E8F0; line-height:1.5;">
-                        <strong style="color:#3B82F6;"><i class="fa-solid fa-lightbulb"></i> Why the AI Chose This:</strong><br>
-                        ${explanationText}
+                        <strong style="color:#3B82F6;"><i class="fa-solid fa-brain"></i> AI Churn Driver & Feature Importance Breakdown:</strong><br>
+                        <p style="margin:4px 0 10px 0; font-size:12px; color:var(--text-muted);">${explanationText}</p>
+                        ${driversHtml}
                     </div>
 
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
