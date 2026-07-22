@@ -121,6 +121,18 @@ def validate_customer_dataframe(df: pd.DataFrame) -> tuple[pd.DataFrame, list[st
     df_clean["Preferred_Channel"] = df_clean["Preferred_Channel"].fillna("Web").astype(str)
     df_clean["Gender"] = df_clean["Gender"].fillna("Unknown").astype(str)
 
+    if "Avg_Order_Value" not in df_clean.columns:
+        df_clean["Avg_Order_Value"] = (df_clean["Monetary_Spend"] / df_clean["Frequency_Orders"].replace(0, 1)).round(2)
+        warnings.append("Calculated 'Avg_Order_Value' from Monetary_Spend and Frequency_Orders.")
+
+    if "Churn_Risk_Index" not in df_clean.columns:
+        rec_factor = (df_clean["Recency_Days"] / 120.0).clip(upper=1.0)
+        freq_factor = (1.0 - (df_clean["Frequency_Orders"] / 20.0)).clip(lower=0.0)
+        eng_factor = (1.0 - (df_clean["Engagement_Score"] / 100.0)).clip(lower=0.0)
+        support_factor = (df_clean["Support_Tickets"] / 5.0).clip(upper=1.0)
+        df_clean["Churn_Risk_Index"] = (0.4 * rec_factor + 0.3 * freq_factor + 0.2 * eng_factor + 0.1 * support_factor).round(3)
+        warnings.append("Calculated 'Churn_Risk_Index' using heuristic RFM-engagement model.")
+
     return df_clean, warnings
 
 

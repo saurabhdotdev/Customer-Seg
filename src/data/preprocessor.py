@@ -35,15 +35,34 @@ class CustomerDataPreprocessor:
         
         return df_rfm
 
+    def ensure_engineered_features(self, df: pd.DataFrame) -> pd.DataFrame:
+        df_out = df.copy()
+        if 'Avg_Order_Value' not in df_out.columns:
+            if 'Monetary_Spend' in df_out.columns and 'Frequency_Orders' in df_out.columns:
+                df_out['Avg_Order_Value'] = (df_out['Monetary_Spend'] / df_out['Frequency_Orders'].replace(0, 1)).round(2)
+            else:
+                df_out['Avg_Order_Value'] = 100.0
+                
+        if 'Churn_Risk_Index' not in df_out.columns:
+            rec_days = df_out['Recency_Days'] if 'Recency_Days' in df_out.columns else 30
+            freq_orders = df_out['Frequency_Orders'] if 'Frequency_Orders' in df_out.columns else 5
+            eng_score = df_out['Engagement_Score'] if 'Engagement_Score' in df_out.columns else 50
+            support_tix = df_out['Support_Tickets'] if 'Support_Tickets' in df_out.columns else 1
+            
+            rec_factor = (rec_days / 120.0).clip(upper=1.0)
+            freq_factor = (1.0 - (freq_orders / 20.0)).clip(lower=0.0)
+            eng_factor = (1.0 - (eng_score / 100.0)).clip(lower=0.0)
+            support_factor = (support_tix / 5.0).clip(upper=1.0)
+            df_out['Churn_Risk_Index'] = (0.4 * rec_factor + 0.3 * freq_factor + 0.2 * eng_factor + 0.1 * support_factor).round(3)
+            
+        return df_out
+
     def fit_transform(self, df: pd.DataFrame) -> tuple[np.ndarray, pd.DataFrame]:
         """
-        Processes dataframe:
-        - Calculates RFM scores
-        - Applies log1p transformation to skewed numerical columns
-        - Standardizes numerical variables
-        - One-hot encodes categorical variables
+        Fits scaler and encoder, and transforms training features.
         """
         df_processed = self.compute_rfm_scores(df)
+        df_processed = self.ensure_engineered_features(df_processed)
         
         # Numerical features for clustering
         num_cols = [

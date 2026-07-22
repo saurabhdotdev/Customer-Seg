@@ -21,14 +21,19 @@ class KMeansSegmentationModel:
         best_k = self.n_clusters
         best_silhouette = -1.0
         
-        for k in k_range:
+        max_k_allowed = min(len(X) - 1, max(k_range))
+        valid_k_range = [k for k in k_range if 2 <= k <= max_k_allowed]
+        if not valid_k_range:
+            valid_k_range = [2] if len(X) >= 2 else [1]
+        
+        for k in valid_k_range:
             km = KMeans(n_clusters=k, random_state=self.random_state, n_init=5)
             labels = km.fit_predict(X)
             inertia = float(km.inertia_)
             sample_sz = 10000 if len(X) > 10000 else None
-            sil = float(silhouette_score(X, labels, sample_size=sample_sz, random_state=42))
-            db = float(davies_bouldin_score(X, labels))
-            ch = float(calinski_harabasz_score(X, labels))
+            sil = float(silhouette_score(X, labels, sample_size=sample_sz, random_state=42)) if len(set(labels)) > 1 else 0.0
+            db = float(davies_bouldin_score(X, labels)) if len(set(labels)) > 1 else 0.0
+            ch = float(calinski_harabasz_score(X, labels)) if len(set(labels)) > 1 else 0.0
             
             results.append({
                 'k': int(k),
