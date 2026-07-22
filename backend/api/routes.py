@@ -3,7 +3,7 @@ import json
 import joblib
 import numpy as np
 import pandas as pd
-from fastapi import APIRouter, File, HTTPException, UploadFile, Depends
+from fastapi import APIRouter, File, HTTPException, UploadFile, Depends, BackgroundTasks
 from fastapi.responses import PlainTextResponse, FileResponse
 from pydantic import BaseModel
 from backend.config import DATA_RAW_PATH, DATA_SEGMENTS_PATH, METADATA_PATH, SCALER_PATH, KMEANS_MODEL_PATH, CLASSIFIER_PATH, LTV_REGRESSOR_PATH, PCA_PATH, BASE_DATA_SEGMENTS, BASE_METADATA_PATH, get_existing_path, get_user_paths
@@ -184,8 +184,71 @@ def get_upload_schema():
         ]
     }
 
+import uuid
+
+JOB_REGISTRY = {}
+
+def execute_async_training(job_id: str, df: pd.DataFrame, data_source: str, paths: dict):
+    try:
+        JOB_REGISTRY[job_id] = {
+            "status": "processing",
+            "progress": 25,
+            "stage": "Parsing CSV and auto-engineering behavioral features..."
+        }
+        os.makedirs(os.path.dirname(paths["raw_path"]), exist_ok=True)
+        os.makedirs(paths["models_dir"], exist_ok=True)
+        df.to_csv(paths["raw_path"], index=False)
+
+        JOB_REGISTRY[job_id] = {
+            "status": "processing",
+            "progress": 55,
+            "stage": "Running MiniBatchKMeans / GMM clustering and PCA 3D reduction..."
+        }
+
+        metadata = train_customer_segmentation_pipeline(
+            df,
+            data_source=data_source,
+            scaler_path=paths["scaler_path"],
+            kmeans_path=paths["kmeans_path"],
+            classifier_path=paths["classifier_path"],
+            ltv_path=paths["ltv_path"],
+            pca_path=paths["pca_path"],
+            processed_path=paths["processed_path"],
+            segments_path=paths["segments_path"],
+            metadata_path=paths["metadata_path"]
+        )
+
+        JOB_REGISTRY[job_id] = {
+            "status": "completed",
+            "progress": 100,
+            "stage": "Model training complete!",
+            "metadata": {
+                "total_samples": metadata["total_samples"],
+                "optimal_k": metadata["optimal_k"],
+                "production_model": metadata["production_model"],
+                "anomaly_count": metadata["anomaly_summary"]["count"],
+                "stability_score": metadata["stability_report"]["mean_adjusted_rand_index"],
+                "validation_warnings": metadata.get("validation_warnings", [])
+            }
+        }
+    except Exception as exc:
+        JOB_REGISTRY[job_id] = {
+            "status": "failed",
+            "progress": 0,
+            "stage": "Training failed",
+            "error": str(exc)
+        }
+
+@router.get("/data/job/{job_id}")
+def get_job_status(job_id: str):
+    job = JOB_REGISTRY.get(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Training job not found.")
+    return job
+
 @router.post("/data/upload")
 async def upload_customer_csv(
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     user: dict = Depends(get_current_user_optional)
 ):
@@ -209,36 +272,29 @@ async def upload_customer_csv(
     if len(df) < 5:
         raise HTTPException(status_code=400, detail="Upload at least 5 customer rows for meaningful segmentation.")
 
-    try:
-        os.makedirs(os.path.dirname(paths["raw_path"]), exist_ok=True)
-        os.makedirs(paths["models_dir"], exist_ok=True)
-        df.to_csv(paths["raw_path"], index=False)
-        metadata = train_customer_segmentation_pipeline(
-            df,
-            data_source=f"uploaded_csv:{filename_clean}",
-            scaler_path=paths["scaler_path"],
-            kmeans_path=paths["kmeans_path"],
-            classifier_path=paths["classifier_path"],
-            ltv_path=paths["ltv_path"],
-            pca_path=paths["pca_path"],
-            processed_path=paths["processed_path"],
-            segments_path=paths["segments_path"],
-            metadata_path=paths["metadata_path"]
-        )
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Training failed: {exc}") from exc
+    job_id = f"job_{uuid.uuid4().hex[:10]}"
+    JOB_REGISTRY[job_id] = {
+        "status": "queued",
+        "progress": 5,
+        "stage": "Job queued for background pipeline execution...",
+        "filename": filename_clean,
+        "total_samples": len(df)
+    }
+
+    background_tasks.add_task(
+        execute_async_training,
+        job_id=job_id,
+        df=df,
+        data_source=f"uploaded_csv:{filename_clean}",
+        paths=paths
+    )
 
     return {
-        "status": "trained",
+        "status": "job_queued",
+        "job_id": job_id,
         "filename": filename_clean,
-        "total_samples": metadata["total_samples"],
-        "optimal_k": metadata["optimal_k"],
-        "production_model": metadata["production_model"],
-        "anomaly_count": metadata["anomaly_summary"]["count"],
-        "stability_score": metadata["stability_report"]["mean_adjusted_rand_index"],
-        "validation_warnings": metadata.get("validation_warnings", [])
+        "total_samples": len(df),
+        "message": f"Async training job {job_id} initiated for {len(df)} rows."
     }
 
 @router.get("/data/status")

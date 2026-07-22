@@ -812,6 +812,27 @@
         </div>
     </div>
 
+    <!-- ASYNC TRAINING PROGRESS MODAL -->
+    <div id="upload-progress-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); backdrop-filter:blur(8px); z-index:99999; justify-content:center; align-items:center;">
+        <div class="glass-card" style="width:480px; max-width:92%; padding:30px; text-align:center; border:1px solid rgba(16,185,129,0.3);">
+            <div style="width:56px; height:56px; border-radius:16px; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); display:inline-flex; align-items:center; justify-content:center; margin-bottom:14px;">
+                <i class="fa-solid fa-microchip" style="font-size:26px; color:#10B981;"></i>
+            </div>
+            <h2 style="font-size:20px; font-weight:800; color:#FFF; margin-bottom:6px;">Training ML Pipeline</h2>
+            <p id="upload-progress-filename" style="font-size:13px; color:#9CA3AF; margin-bottom:18px;">Processing dataset...</p>
+
+            <!-- Progress Bar -->
+            <div style="background:rgba(255,255,255,0.08); border-radius:10px; height:12px; overflow:hidden; margin-bottom:14px; position:relative;">
+                <div id="upload-progress-bar" style="width:5%; height:100%; background:linear-gradient(90deg, #3B82F6, #10B981); transition:width 0.4s ease; border-radius:10px;"></div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; font-size:12px; color:#9CA3AF; margin-bottom:10px;">
+                <span id="upload-progress-stage">Initializing...</span>
+                <span id="upload-progress-percent" style="font-weight:700; color:#10B981;">5%</span>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="/static/js/charts.js"></script>
     <script src="/static/js/app.js"></script>

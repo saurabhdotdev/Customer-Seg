@@ -515,18 +515,25 @@ function initUploadForm() {
     const form = document.getElementById('upload-form');
     if (!form) return;
 
+    const modal = document.getElementById('upload-progress-modal');
+    const bar = document.getElementById('upload-progress-bar');
+    const stageEl = document.getElementById('upload-progress-stage');
+    const percentEl = document.getElementById('upload-progress-percent');
+    const filenameEl = document.getElementById('upload-progress-filename');
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const fileInput = document.getElementById('csv-file-input');
         if (!fileInput.files || fileInput.files.length === 0) return;
 
+        const file = fileInput.files[0];
         const submitBtn = form.querySelector('button[type="submit"]');
         const origText = submitBtn.innerHTML;
         submitBtn.disabled = true;
-        submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Uploading & Training Models...`;
+        submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Initiating Training Job...`;
 
         const formData = new FormData();
-        formData.append('file', fileInput.files[0]);
+        formData.append('file', file);
 
         try {
             const res = await fetch('/api/data/upload', {
@@ -534,25 +541,79 @@ function initUploadForm() {
                 headers: getAuthHeaders(),
                 body: formData
             });
-            if (res.ok) {
-                const data = await res.json();
-                alert(`Dataset '${data.filename}' successfully processed! Models retrained on ${data.total_samples.toLocaleString()} customers.`);
+
+            if (!res.ok) {
+                const err = await res.json();
+                alert(`Upload failed: ${err.detail || 'Error processing CSV'}`);
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = origText;
+                return;
+            }
+
+            const data = await res.json();
+            if (data.status === 'job_queued') {
+                if (modal) {
+                    filenameEl.innerText = `Processing '${file.name}' (${data.total_samples.toLocaleString()} Customers)...`;
+                    bar.style.width = '10%';
+                    percentEl.innerText = '10%';
+                    stageEl.innerText = 'Job queued for background pipeline execution...';
+                    modal.style.display = 'flex';
+                }
+
+                // Poll job progress
+                pollTrainingJob(data.job_id, () => {
+                    if (modal) modal.style.display = 'none';
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = origText;
+                    form.reset();
+                });
+            } else {
+                alert(`Dataset '${data.filename}' successfully processed!`);
                 await checkDatasetStatus();
                 await loadDashboardData();
                 await loadRfmData();
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = origText;
                 form.reset();
-            } else {
-                const err = await res.json();
-                alert(`Upload failed: ${err.detail || 'Error processing CSV'}`);
             }
         } catch (err) {
             console.error("Upload error:", err);
             alert("Upload failed due to connection error.");
-        } finally {
             submitBtn.disabled = false;
             submitBtn.innerHTML = origText;
         }
     });
+
+    function pollTrainingJob(jobId, onComplete) {
+        const interval = setInterval(async () => {
+            try {
+                const res = await fetch(`/api/data/job/${jobId}`, { headers: getAuthHeaders() });
+                if (!res.ok) return;
+
+                const job = await res.json();
+                if (bar) bar.style.width = `${job.progress}%`;
+                if (percentEl) percentEl.innerText = `${job.progress}%`;
+                if (stageEl) stageEl.innerText = job.stage || 'Training...';
+
+                if (job.status === 'completed') {
+                    clearInterval(interval);
+                    setTimeout(async () => {
+                        alert(`Async ML Pipeline Training Complete! Processed ${job.metadata.total_samples.toLocaleString()} customers with ${job.metadata.production_model}.`);
+                        onComplete();
+                        await checkDatasetStatus();
+                        await loadDashboardData();
+                        await loadRfmData();
+                    }, 400);
+                } else if (job.status === 'failed') {
+                    clearInterval(interval);
+                    alert(`Training failed: ${job.error || 'Unknown error'}`);
+                    onComplete();
+                }
+            } catch (err) {
+                console.error("Job polling error:", err);
+            }
+        }, 1000);
+    }
 }
 
 /* Interactive Sandbox & ML Pipeline Flow Explanation Engine */

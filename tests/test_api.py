@@ -145,3 +145,15 @@ def test_api_multi_tenant_user_isolation():
     user_b_overview = client.get("/api/overview", headers={"Authorization": f"Bearer {token_b}"})
     assert user_b_overview.status_code == 200
     assert user_b_overview.json()["total_customers"] == 15
+
+def test_api_async_job_status():
+    import io
+    import pandas as pd
+    df_test = pd.DataFrame({"Recency_Days": list(range(1, 10)), "Frequency_Orders": list(range(1, 10)), "Monetary_Spend": [100.0 * i for i in range(1, 10)]})
+    csv_bytes = df_test.to_csv(index=False).encode()
+    up = client.post("/api/data/upload", files={"file": ("async_test.csv", io.BytesIO(csv_bytes), "text/csv")})
+    assert up.status_code == 200
+    job_id = up.json()["job_id"]
+    job_res = client.get(f"/api/data/job/{job_id}")
+    assert job_res.status_code == 200
+    assert "status" in job_res.json()
