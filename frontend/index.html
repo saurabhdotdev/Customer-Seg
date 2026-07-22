@@ -224,7 +224,10 @@
                         </div>
                         <form id="upload-form">
                             <div class="form-group" style="margin-bottom:16px;">
-                                <label>Select Customer CSV File</label>
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:8px;">
+                                    <label style="margin:0;">Select Customer CSV File</label>
+                                    <a href="/api/data/sample-csv" download="sample_customer_upload.csv" class="btn btn-secondary btn-sm" style="font-size:11px; padding:4px 10px; text-decoration:none;"><i class="fa-solid fa-download" style="color:#10B981;"></i> Download Sample CSV</a>
+                                </div>
                                 <input type="file" id="csv-file-input" accept=".csv" required style="padding:10px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); border-radius:8px; width:100%; color:#FFF;">
                             </div>
                             <button type="submit" class="btn btn-primary btn-block"><i class="fa-solid fa-gears"></i> Process & Retrain Models</button>

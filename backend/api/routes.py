@@ -289,14 +289,26 @@ def download_executive_report():
 
 @router.get("/export/csv")
 def export_segmented_csv():
-    if not os.path.exists(DATA_SEGMENTS_PATH):
-        raise HTTPException(status_code=404, detail="Segmented dataset not found.")
-        
+    df = get_active_df()
+    os.makedirs(os.path.dirname(DATA_SEGMENTS_PATH), exist_ok=True)
+    df.to_csv(DATA_SEGMENTS_PATH, index=False)
     return FileResponse(
         path=DATA_SEGMENTS_PATH,
         filename="customer_segments_export.csv",
         media_type="text/csv"
     )
+
+@router.get("/data/sample-csv")
+def download_sample_csv():
+    from backend.config import BASE_DIR
+    sample_path = os.path.join(BASE_DIR, "sample_customer_upload.csv")
+    if os.path.exists(sample_path):
+        return FileResponse(
+            path=sample_path,
+            filename="sample_customer_upload.csv",
+            media_type="text/csv"
+        )
+    raise HTTPException(status_code=404, detail="Sample CSV file not found.")
 
 @router.get("/analytics/elbow-silhouette")
 def get_elbow_silhouette_data():
