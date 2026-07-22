@@ -233,3 +233,27 @@ def test_api_webhook_endpoints():
     logs = client.get("/api/webhooks/logs", headers=headers)
     assert logs.status_code == 200
     assert len(logs.json()["logs"]) >= 1
+
+def test_api_linear_models_endpoints():
+    headers = get_test_auth_headers()
+    churn_payload = {
+        "Recency_Days": 14,
+        "Frequency_Orders": 28,
+        "Monetary_Spend": 3500.0,
+        "Category_Diversity": 5,
+        "Engagement_Score": 85.0,
+        "Support_Tickets": 0,
+        "Discount_Ratio": 0.10,
+        "Return_Rate": 0.02
+    }
+    churn_res = client.post("/api/predict/churn-probability", json=churn_payload, headers=headers)
+    assert churn_res.status_code == 200
+    cdata = churn_res.json()
+    assert "churn_probability" in cdata
+    assert "odds_breakdown" in cdata
+
+    bench_res = client.get("/api/models/ltv-benchmark", headers=headers)
+    assert bench_res.status_code == 200
+    bdata = bench_res.json()
+    assert "ridge_linear_baseline" in bdata
+    assert "gradient_boosting_regressor" in bdata

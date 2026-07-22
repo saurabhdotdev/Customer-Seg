@@ -104,3 +104,42 @@ def test_churn_explainability_engine():
     assert exp["overall_churn_risk"] == 0.85
     assert len(exp["top_churn_risk_drivers"]) >= 1
     assert "summary_explanation" in exp
+
+def test_logistic_churn_classifier():
+    from src.models.linear_models import LogisticChurnClassifier
+    from src.data.generator import generate_customer_dataset
+    df = generate_customer_dataset(n_samples=200, random_state=42)
+    
+    classifier = LogisticChurnClassifier()
+    fit_res = classifier.fit(df)
+    
+    assert fit_res["roc_auc_score"] >= 0.50
+    assert len(fit_res["odds_ratios"]) == 8
+    
+    pred_res = classifier.predict_churn_probability({
+        "Recency_Days": 10, "Frequency_Orders": 50, "Monetary_Spend": 5000.0,
+        "Category_Diversity": 8, "Engagement_Score": 90.0, "Support_Tickets": 0,
+        "Discount_Ratio": 0.05, "Return_Rate": 0.01
+    })
+    assert "churn_probability" in pred_res
+    assert "risk_category" in pred_res
+    assert 0.0 <= pred_res["churn_probability"] <= 1.0
+
+def test_linear_ltv_regressor():
+    from src.models.linear_models import LinearLTVRegressor
+    from src.data.generator import generate_customer_dataset
+    df = generate_customer_dataset(n_samples=200, random_state=42)
+    
+    regressor = LinearLTVRegressor()
+    fit_res = regressor.fit(df)
+    
+    assert "r2_score" in fit_res
+    assert "rmse" in fit_res
+    assert len(fit_res["feature_multipliers"]) == 8
+    
+    pred_val = regressor.predict({
+        "Recency_Days": 10, "Frequency_Orders": 50, "Monetary_Spend": 5000.0,
+        "Category_Diversity": 8, "Engagement_Score": 90.0, "Support_Tickets": 0,
+        "Discount_Ratio": 0.05, "Return_Rate": 0.01
+    })
+    assert isinstance(pred_val, float)
