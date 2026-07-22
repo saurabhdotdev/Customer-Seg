@@ -367,7 +367,7 @@ def get_benchmark(user: dict = Depends(get_current_user_required)):
 def get_rfm_analytics(user: dict = Depends(get_current_user_required)):
     user_id = user["sub"]
     df = get_active_df(user_id)
-    return RFMAnalyticsEngine.compute_rfm_scores(df)
+    return RFMAnalyticsEngine.generate_rfm_analysis(df)
 
 @router.get("/model/info")
 def get_model_info():
@@ -806,6 +806,7 @@ def set_active_production_model(req: AutoMLSelectSchema, user: dict = Depends(ge
     meta["production_model"] = req.selected_model
     meta["selected_at_utc"] = datetime.now(timezone.utc).isoformat()
     try:
+        os.makedirs(os.path.dirname(paths["metadata_path"]), exist_ok=True)
         with open(paths["metadata_path"], 'w') as f:
             json.dump(meta, f, indent=2)
     except Exception as exc:
