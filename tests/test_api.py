@@ -157,3 +157,11 @@ def test_api_async_job_status():
     job_res = client.get(f"/api/data/job/{job_id}")
     assert job_res.status_code == 200
     assert "status" in job_res.json()
+
+def test_api_analytics_ask_endpoint():
+    payload = {"query": "Which segment has the highest churn risk?"}
+    response = client.post("/api/analytics/ask", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert "answer" in data
+    assert "category" in data

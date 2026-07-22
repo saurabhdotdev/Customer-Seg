@@ -1,16 +1,87 @@
+import os
 import json
+import urllib.request
 import pandas as pd
 import numpy as np
 
 class CustomerAnalyticsQueryEngine:
     """
-    Intelligent Data Analytics Query Engine that processes natural language
-    questions about customer segments, metrics, ML algorithms, elbow curves,
-    silhouette scores, and business playbooks.
+    Intelligent Data Analytics Query Engine powered by Gemini 2.5 Flash AI
+    with rich heuristic fallbacks for natural language customer segmentation questions.
     """
     
     @classmethod
     def answer_query(cls, query_text: str, df: pd.DataFrame, metadata: dict) -> dict:
+        api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+        if api_key:
+            try:
+                return cls._query_gemini(query_text, df, metadata, api_key)
+            except Exception as exc:
+                print("Gemini API call failed, falling back to heuristic query engine:", exc)
+
+        return cls._query_heuristic(query_text, df, metadata)
+
+    @classmethod
+    def _query_gemini(cls, query_text: str, df: pd.DataFrame, metadata: dict, api_key: str) -> dict:
+        total_customers = len(df)
+        total_revenue = float(df['Monetary_Spend'].sum()) if 'Monetary_Spend' in df.columns else 0.0
+        avg_spend = float(df['Monetary_Spend'].mean()) if 'Monetary_Spend' in df.columns else 0.0
+        opt_k = metadata.get('optimal_k', 4)
+        personas = metadata.get('persona_summary', {}).get('clusters', [])
+
+        context = f"""
+Dataset Summary:
+- Total Customers: {total_customers}
+- Total Annual Revenue: ${total_revenue:,.2f}
+- Average Spend per Customer: ${avg_spend:,.2f}
+- Optimal Cluster Count (K): {opt_k}
+- Personas: {json.dumps(personas, indent=2)}
+"""
+
+        prompt = f"""
+You are an expert Chief Customer Analytics Officer. Answer the user's question concisely using the provided customer segmentation dataset context.
+
+{context}
+
+User Question: {query_text}
+
+Provide your answer in strict JSON format with keys:
+"category": short string category,
+"answer": detailed markdown answer,
+"recommended_action": recommended marketing strategy or action.
+"""
+
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
+        payload = {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {"response_mime_type": "application/json"}
+        }
+        
+        req = urllib.request.Request(
+            url,
+            data=json.dumps(payload).encode('utf-8'),
+            headers={'Content-Type': 'application/json'}
+        )
+
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read().decode('utf-8'))
+            text_resp = data['candidates'][0]['content']['parts'][0]['text']
+            parsed = json.loads(text_resp)
+            
+            return {
+                "query": query_text,
+                "category": parsed.get("category", "Gemini AI Insights"),
+                "answer": parsed.get("answer", "Analysis completed."),
+                "key_stats": {
+                    "total_customers": total_customers,
+                    "total_revenue": round(total_revenue, 2),
+                    "ai_engine": "Gemini 2.5 Flash AI"
+                },
+                "recommended_action": parsed.get("recommended_action", "Apply segment-targeted strategies.")
+            }
+
+    @classmethod
+    def _query_heuristic(cls, query_text: str, df: pd.DataFrame, metadata: dict) -> dict:
         q = query_text.lower().strip()
         
         # 1. Churn Risk queries

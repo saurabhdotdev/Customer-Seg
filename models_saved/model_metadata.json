@@ -1,6 +1,6 @@
 {
   "project_positioning": "Production-style customer intelligence platform for segmentation, anomaly detection, real-time prediction, and marketing decisioning.",
-  "trained_at_utc": "2026-07-22T16:26:45.525610+00:00",
+  "trained_at_utc": "2026-07-22T16:32:39.278551+00:00",
   "data_source": "uploaded_csv:async_test.csv",
   "validation_warnings": [
     "Auto-mapped column names: {'Recency_Days': 'Recency_Days', 'Frequency_Orders': 'Frequency_Orders', 'Monetary_Spend': 'Monetary_Spend'}",
