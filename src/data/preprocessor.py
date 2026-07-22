@@ -20,15 +20,15 @@ class CustomerDataPreprocessor:
     def compute_rfm_scores(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Computes standard RFM quartiles/quintiles (1 to 5).
-        R: 5 is most recent, 1 is least recent.
-        F: 5 is highest frequency, 1 is lowest.
-        M: 5 is highest monetary spend, 1 is lowest.
         """
         df_rfm = df.copy()
+        q_count = max(1, min(5, len(df_rfm)))
+        labels_r = list(range(q_count, 0, -1))
+        labels_fm = list(range(1, q_count + 1))
         
-        df_rfm['R_Score'] = pd.qcut(df_rfm['Recency_Days'], q=5, labels=[5, 4, 3, 2, 1]).astype(int)
-        df_rfm['F_Score'] = pd.qcut(df_rfm['Frequency_Orders'].rank(method='first'), q=5, labels=[1, 2, 3, 4, 5]).astype(int)
-        df_rfm['M_Score'] = pd.qcut(df_rfm['Monetary_Spend'], q=5, labels=[1, 2, 3, 4, 5]).astype(int)
+        df_rfm['R_Score'] = pd.qcut(df_rfm['Recency_Days'].rank(method='first'), q=q_count, labels=labels_r).astype(int)
+        df_rfm['F_Score'] = pd.qcut(df_rfm['Frequency_Orders'].rank(method='first'), q=q_count, labels=labels_fm).astype(int)
+        df_rfm['M_Score'] = pd.qcut(df_rfm['Monetary_Spend'].rank(method='first'), q=q_count, labels=labels_fm).astype(int)
         
         df_rfm['RFM_Score_Sum'] = df_rfm['R_Score'] + df_rfm['F_Score'] + df_rfm['M_Score']
         df_rfm['RFM_Group'] = df_rfm['R_Score'].astype(str) + df_rfm['F_Score'].astype(str) + df_rfm['M_Score'].astype(str)

@@ -74,8 +74,8 @@ async def upload_customer_csv(file: UploadFile = File(...)):
     except Exception as exc:
         raise HTTPException(status_code=400, detail=f"Could not read CSV: {exc}") from exc
 
-    if len(df) < 50:
-        raise HTTPException(status_code=400, detail="Upload at least 50 customers for meaningful segmentation.")
+    if len(df) < 5:
+        raise HTTPException(status_code=400, detail="Upload at least 5 customers for meaningful segmentation.")
 
     try:
         os.makedirs(os.path.dirname(DATA_RAW_PATH), exist_ok=True)
