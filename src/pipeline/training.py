@@ -25,20 +25,43 @@ ALIAS_MAP = {
     "recency_days": "Recency_Days",
     "last_order_days": "Recency_Days",
     "days_since_last_purchase": "Recency_Days",
+    "days_since_last_order": "Recency_Days",
+    "last_purchase_days": "Recency_Days",
+    "recency_in_days": "Recency_Days",
+    "days_ago": "Recency_Days",
+    "days_inactive": "Recency_Days",
+    "last_seen_days": "Recency_Days",
     "frequency": "Frequency_Orders",
     "frequency_orders": "Frequency_Orders",
     "orders": "Frequency_Orders",
     "total_orders": "Frequency_Orders",
+    "order_count": "Frequency_Orders",
+    "num_orders": "Frequency_Orders",
+    "number_of_orders": "Frequency_Orders",
     "purchases": "Frequency_Orders",
+    "total_purchases": "Frequency_Orders",
+    "purchase_count": "Frequency_Orders",
+    "transactions": "Frequency_Orders",
+    "total_transactions": "Frequency_Orders",
+    "num_transactions": "Frequency_Orders",
     "monetary": "Monetary_Spend",
     "monetary_spend": "Monetary_Spend",
     "spend": "Monetary_Spend",
     "total_spend": "Monetary_Spend",
     "revenue": "Monetary_Spend",
+    "total_revenue": "Monetary_Spend",
     "amount": "Monetary_Spend",
+    "total_amount": "Monetary_Spend",
+    "sales": "Monetary_Spend",
+    "total_sales": "Monetary_Spend",
+    "gross_revenue": "Monetary_Spend",
+    "spent": "Monetary_Spend",
     "customer_id": "Customer_ID",
     "id": "Customer_ID",
     "user_id": "Customer_ID",
+    "client_id": "Customer_ID",
+    "account_id": "Customer_ID",
+    "cust_id": "Customer_ID",
 }
 
 CORE_REQUIRED = {"Recency_Days", "Frequency_Orders", "Monetary_Spend"}
@@ -60,20 +83,66 @@ def validate_customer_dataframe(df: pd.DataFrame) -> tuple[pd.DataFrame, list[st
     df_clean = df.copy()
     warnings = []
 
-    # Map column aliases
+    # 1. Exact & normalized alias mapping
     rename_dict = {}
     for col in df_clean.columns:
-        col_lower = str(col).strip().lower().replace(" ", "_")
-        if col_lower in ALIAS_MAP:
-            rename_dict[col] = ALIAS_MAP[col_lower]
+        col_clean = str(col).strip().lower().replace(" ", "_").replace("-", "_")
+        col_clean = "".join([c for c in col_clean if c.isalnum() or c == "_"])
+        if col_clean in ALIAS_MAP:
+            rename_dict[col] = ALIAS_MAP[col_clean]
+
+    # 2. Fuzzy substring fallback if core RFM columns unmapped
+    for col in df_clean.columns:
+        if col in rename_dict or col in CORE_REQUIRED:
+            continue
+        c_lower = str(col).strip().lower()
+        mapped_targets = set(rename_dict.values()).union(set(df_clean.columns))
+        
+        if "Monetary_Spend" not in mapped_targets and ("monetar" in c_lower or "spend" in c_lower or "revenu" in c_lower or "amount" in c_lower or "sales" in c_lower or "val" in c_lower or "money" in c_lower or "paid" in c_lower or "price" in c_lower or "cost" in c_lower or "dollar" in c_lower):
+            rename_dict[col] = "Monetary_Spend"
+        elif "Frequency_Orders" not in mapped_targets and ("frequenc" in c_lower or "order" in c_lower or "purchase" in c_lower or "transact" in c_lower or "bought" in c_lower or "qty" in c_lower or "quantity" in c_lower or "count" in c_lower or "times" in c_lower):
+            rename_dict[col] = "Frequency_Orders"
+        elif "Recency_Days" not in mapped_targets and ("recenc" in c_lower or "last" in c_lower or "days" in c_lower or "recent" in c_lower or "ago" in c_lower or "since" in c_lower or "date" in c_lower or "time" in c_lower):
+            rename_dict[col] = "Recency_Days"
+        elif "Customer_ID" not in mapped_targets and ("cust" in c_lower or "user" in c_lower or "client" in c_lower or "account" in c_lower or "email" in c_lower or "name" in c_lower):
+            rename_dict[col] = "Customer_ID"
+
     if rename_dict:
         df_clean.rename(columns=rename_dict, inplace=True)
         warnings.append(f"Auto-mapped column names: {rename_dict}")
 
-    missing_core = sorted(CORE_REQUIRED - set(df_clean.columns))
+    # 3. Position & magnitude fallback if numeric columns exist
+    missing_core = CORE_REQUIRED - set(df_clean.columns)
     if missing_core:
+        num_cols = df_clean.select_dtypes(include=["number"]).columns.tolist()
+        if len(num_cols) >= 3:
+            col_means = {c: df_clean[c].mean() for c in num_cols}
+            sorted_by_mean = sorted(num_cols, key=lambda c: col_means[c], reverse=True)
+            
+            if "Monetary_Spend" in missing_core:
+                spend_col = sorted_by_mean[0]
+                df_clean.rename(columns={spend_col: "Monetary_Spend"}, inplace=True)
+                warnings.append(f"Auto-inferred '{spend_col}' as Monetary_Spend based on value magnitude.")
+                sorted_by_mean.remove(spend_col)
+                missing_core.remove("Monetary_Spend")
+
+            if "Frequency_Orders" in missing_core and sorted_by_mean:
+                freq_col = sorted_by_mean[-1]
+                df_clean.rename(columns={freq_col: "Frequency_Orders"}, inplace=True)
+                warnings.append(f"Auto-inferred '{freq_col}' as Frequency_Orders based on order count scale.")
+                sorted_by_mean.remove(freq_col)
+                missing_core.remove("Frequency_Orders")
+
+            if "Recency_Days" in missing_core and sorted_by_mean:
+                rec_col = sorted_by_mean[0]
+                df_clean.rename(columns={rec_col: "Recency_Days"}, inplace=True)
+                warnings.append(f"Auto-inferred '{rec_col}' as Recency_Days based on days scale.")
+                missing_core.remove("Recency_Days")
+
+    missing_core_final = sorted(CORE_REQUIRED - set(df_clean.columns))
+    if missing_core_final:
         raise ValueError(
-            f"Missing required core RFM columns: {', '.join(missing_core)}. "
+            f"Missing required core RFM columns: {', '.join(missing_core_final)}. "
             "Please include columns for Recency, Frequency (orders), and Monetary (spend)."
         )
 
