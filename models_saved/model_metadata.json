@@ -1,0 +1,220 @@
+{
+  "total_samples": 5000,
+  "optimal_k": 4,
+  "kmeans_centroids": [
+    [
+      0.4111640072445069,
+      0.17550121852575576,
+      -0.6217576606332927,
+      -1.243758441991791,
+      -0.654916226420487,
+      -0.12556062632114956,
+      1.69270689858667,
+      0.38577107041962866,
+      0.06274568143488934,
+      0.009505703422052925,
+      0.5788973384030422,
+      0.41159695817490494,
+      0.49524714828897337,
+      0.46768060836501907,
+      0.037072243346007616
+    ],
+    [
+      -0.5261737572979827,
+      0.5017195724850401,
+      0.5978096391389442,
+      0.23547746977598832,
+      0.823437076540227,
+      0.7950520202049828,
+      -0.6016703365941845,
+      -0.48102586830208416,
+      -0.6820391269471799,
+      0.06329735034347365,
+      0.49754661432777264,
+      0.43915603532875375,
+      0.5014720314033366,
+      0.4685966633954859,
+      0.029931305201177646
+    ],
+    [
+      1.2928296877601735,
+      0.3354767000887223,
+      0.6528102242703971,
+      0.5340092923371632,
+      0.04648950204304783,
+      -1.405193495989028,
+      -0.07426063306400776,
+      1.1902659566412037,
+      1.6213524066565799,
+      0.40535868625756305,
+      0.04494382022471893,
+      0.5496974935177183,
+      0.5185825410544511,
+      0.4433880726015559,
+      0.03802938634399311
+    ],
+    [
+      -1.136794644072314,
+      -2.118563496170328,
+      -1.752388333412742,
+      0.2797902341803501,
+      -1.385101255854504,
+      0.18271266476945464,
+      -0.6223160144477721,
+      -1.0659205289716795,
+      -0.7329581017965654,
+      0.17264276228419656,
+      0.5232403718459495,
+      0.304116865869854,
+      0.4780876494023904,
+      0.4900398406374503,
+      0.03187250996015936
+    ]
+  ],
+  "pca_metadata": {
+    "variance_explained_per_component": [
+      0.3531,
+      0.2624,
+      0.1479
+    ],
+    "total_variance_explained": 0.7633
+  },
+  "benchmark_comparison": [
+    {
+      "Algorithm": "K-Means Clustering",
+      "Clusters": 4,
+      "Outliers/Noise": 0,
+      "Silhouette_Score": 0.4199,
+      "Davies_Bouldin_Index": 0.9418,
+      "Calinski_Harabasz_Index": 2992.42
+    },
+    {
+      "Algorithm": "Hierarchical Agglomerative",
+      "Clusters": 4,
+      "Outliers/Noise": 0,
+      "Silhouette_Score": 0.4137,
+      "Davies_Bouldin_Index": 0.9612,
+      "Calinski_Harabasz_Index": 2901.73
+    },
+    {
+      "Algorithm": "DBSCAN (Density-Based)",
+      "Clusters": 2,
+      "Outliers/Noise": 307,
+      "Silhouette_Score": 0.3111,
+      "Davies_Bouldin_Index": 1.0534,
+      "Calinski_Harabasz_Index": 1470.55
+    },
+    {
+      "Algorithm": "Gaussian Mixture Model (GMM)",
+      "Clusters": 4,
+      "Outliers/Noise": 0,
+      "Silhouette_Score": 0.2945,
+      "Davies_Bouldin_Index": 1.462,
+      "Calinski_Harabasz_Index": 1800.33
+    }
+  ],
+  "persona_summary": {
+    "total_customers": 5000,
+    "total_revenue": 19969565.95,
+    "cluster_labels_map": {
+      "0": "\ud83c\udff7\ufe0f Bargain Hunters",
+      "1": "\ud83d\udc8e Steady Loyalists",
+      "2": "\u26a0\ufe0f At-Risk / Hibernating",
+      "3": "\ud83c\udf31 New Potential Loyalists"
+    },
+    "clusters": [
+      {
+        "cluster_id": 0,
+        "persona_key": "BARGAIN",
+        "persona_title": "\ud83c\udff7\ufe0f Bargain Hunters",
+        "tagline": "Discount-Driven & Price Sensitive",
+        "description": "Customers who buy primarily during promotional sales and clearance events with high discount usage.",
+        "strategy": "Target with seasonal clearance alerts, bundle discount offers, and flash sales without eroding margin.",
+        "color": "#F59E0B",
+        "icon": "tag",
+        "metrics": {
+          "customer_count": 1052,
+          "customer_percentage": 21.04,
+          "total_revenue": 1175182.43,
+          "revenue_percentage": 5.88,
+          "avg_recency_days": 86.3,
+          "avg_frequency_orders": 31.3,
+          "avg_monetary_spend": 1117.09,
+          "avg_order_value": 40.49,
+          "avg_engagement_score": 57.7,
+          "avg_discount_ratio": 0.81,
+          "avg_churn_risk": 0.294
+        }
+      },
+      {
+        "cluster_id": 1,
+        "persona_key": "LOYALIST",
+        "persona_title": "\ud83d\udc8e Steady Loyalists",
+        "tagline": "Consistent Purchasers & High Lifetime Value Potential",
+        "description": "Regular customers with reliable ordering patterns and solid order value.",
+        "strategy": "Implement cross-sell & up-sell recommendations, tier-upgrade incentives, and loyalty points accelerators.",
+        "color": "#3B82F6",
+        "icon": "shield-check",
+        "metrics": {
+          "customer_count": 2038,
+          "customer_percentage": 40.76,
+          "total_revenue": 12126663.59,
+          "revenue_percentage": 60.73,
+          "avg_recency_days": 28.3,
+          "avg_frequency_orders": 46.0,
+          "avg_monetary_spend": 5950.28,
+          "avg_order_value": 140.41,
+          "avg_engagement_score": 77.9,
+          "avg_discount_ratio": 0.23,
+          "avg_churn_risk": 0.131
+        }
+      },
+      {
+        "cluster_id": 2,
+        "persona_key": "AT_RISK",
+        "persona_title": "\u26a0\ufe0f At-Risk / Hibernating",
+        "tagline": "High Past Value, but Prolonged Inactivity",
+        "description": "Previously valuable customers who have not made a purchase recently and show high churn risk.",
+        "strategy": "Launch win-back email drip campaigns, personalized re-engagement discounts, and feedback surveys.",
+        "color": "#EF4444",
+        "icon": "alert-triangle",
+        "metrics": {
+          "customer_count": 1157,
+          "customer_percentage": 23.14,
+          "total_revenue": 6459733.68,
+          "revenue_percentage": 32.35,
+          "avg_recency_days": 235.0,
+          "avg_frequency_orders": 37.4,
+          "avg_monetary_spend": 5583.18,
+          "avg_order_value": 199.19,
+          "avg_engagement_score": 29.6,
+          "avg_discount_ratio": 0.37,
+          "avg_churn_risk": 0.636
+        }
+      },
+      {
+        "cluster_id": 3,
+        "persona_key": "NEW_BUYER",
+        "persona_title": "\ud83c\udf31 New Potential Loyalists",
+        "tagline": "Recent First-Time Buyers with Growth Trajectory",
+        "description": "Recent buyers with low transaction count but promising initial engagement metrics.",
+        "strategy": "Deliver engaging onboarding series, product education guides, and second-purchase discount incentives.",
+        "color": "#8B5CF6",
+        "icon": "sparkles",
+        "metrics": {
+          "customer_count": 753,
+          "customer_percentage": 15.06,
+          "total_revenue": 207986.25,
+          "revenue_percentage": 1.04,
+          "avg_recency_days": 12.2,
+          "avg_frequency_orders": 2.0,
+          "avg_monetary_spend": 276.21,
+          "avg_order_value": 158.87,
+          "avg_engagement_score": 64.5,
+          "avg_discount_ratio": 0.23,
+          "avg_churn_risk": 0.12
+        }
+      }
+    ]
+  }
+}

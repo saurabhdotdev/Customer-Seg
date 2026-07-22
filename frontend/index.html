@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Segmentation AI — Enterprise Analytics Platform</title>
+    <!-- Modern Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Chart.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body class="dark-theme">
+    <!-- App Container -->
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-icon"><i class="fa-solid fa-chart-pie"></i></div>
+                <div class="brand-text">
+                    <h2>SegEngine<span class="badge-ai">PRO</span></h2>
+                    <p>Customer Intelligence ML</p>
+                </div>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="#overview" class="nav-item active" data-tab="tab-overview">
+                    <i class="fa-solid fa-gauge-high"></i> <span>Executive Overview</span>
+                </a>
+                <a href="#personas" class="nav-item" data-tab="tab-personas">
+                    <i class="fa-solid fa-user-group"></i> <span>Customer Personas</span>
+                </a>
+                <a href="#clusters" class="nav-item" data-tab="tab-clusters">
+                    <i class="fa-solid fa-cubes-stacked"></i> <span>PCA 3D Visualization</span>
+                </a>
+                <a href="#benchmark" class="nav-item" data-tab="tab-benchmark">
+                    <i class="fa-solid fa-layer-group"></i> <span>Algorithm Benchmarks</span>
+                </a>
+                <a href="#predictor" class="nav-item" data-tab="tab-predictor">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Live Predictor Tool</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="system-status">
+                    <span class="pulse-dot"></span>
+                    <div class="status-info">
+                        <span class="status-label">ML Engine</span>
+                        <span class="status-val">Optimal (KMeans + GMM)</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header Bar -->
+            <header class="top-header">
+                <div class="header-title">
+                    <h1 id="page-title">Executive Overview</h1>
+                    <p class="subtitle">Multi-Algorithm Customer Segmentation & Behavioral Intelligence Platform</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" id="btn-refresh"><i class="fa-solid fa-rotate"></i> Refresh Data</button>
+                    <button class="btn btn-primary" id="btn-export"><i class="fa-solid fa-download"></i> Export Segment Data</button>
+                </div>
+            </header>
+
+            <!-- TAB 1: EXECUTIVE OVERVIEW -->
+            <section id="tab-overview" class="tab-content active">
+                <div class="stats-grid">
+                    <div class="stat-card gradient-emerald">
+                        <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+                        <div class="stat-details">
+                            <span class="stat-title">Total Customers</span>
+                            <h3 class="stat-number" id="stat-total-customers">5,000</h3>
+                            <span class="stat-sub"><i class="fa-solid fa-arrow-up"></i> Full active base</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card gradient-blue">
+                        <div class="stat-icon"><i class="fa-solid fa-sack-dollar"></i></div>
+                        <div class="stat-details">
+                            <span class="stat-title">Total Annual Revenue</span>
+                            <h3 class="stat-number" id="stat-total-revenue">$18,420,500</h3>
+                            <span class="stat-sub">Across all segments</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card gradient-purple">
+                        <div class="stat-icon"><i class="fa-solid fa-chart-line"></i></div>
+                        <div class="stat-details">
+                            <span class="stat-title">Avg Spend / Customer</span>
+                            <h3 class="stat-number" id="stat-avg-spend">$3,684.10</h3>
+                            <span class="stat-sub">Annual Monetary value</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card gradient-amber">
+                        <div class="stat-icon"><i class="fa-solid fa-bullseye"></i></div>
+                        <div class="stat-details">
+                            <span class="stat-title">Optimal Cluster Count</span>
+                            <h3 class="stat-number" id="stat-cluster-count">5 Clusters</h3>
+                            <span class="stat-sub">K-Means Silhouette = 0.584</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="dashboard-grid">
+                    <div class="glass-card chart-card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-chart-pie"></i> Revenue Share by Persona Segment</h3>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="revenuePieChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="glass-card chart-card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-chart-bar"></i> Recency vs Monetary Spend Profile</h3>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="recencyMonetaryChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: CUSTOMER PERSONAS -->
+            <section id="tab-personas" class="tab-content">
+                <div class="section-intro">
+                    <h2>Behavioral Customer Persona Playbooks</h2>
+                    <p>Machine-discovered customer segments paired with tailored marketing & revenue optimization strategies.</p>
+                </div>
+                <div id="personas-container" class="personas-grid">
+                    <!-- Dynamic Persona Cards rendered via JS -->
+                </div>
+            </section>
+
+            <!-- TAB 3: PCA 3D VISUALIZATION -->
+            <section id="tab-clusters" class="tab-content">
+                <div class="glass-card scatter-card">
+                    <div class="card-header flex-between">
+                        <div>
+                            <h2><i class="fa-solid fa-cubes"></i> 2D & 3D PCA Dimensionality Scatterplot</h2>
+                            <p class="card-sub">Principal Component Projections of 5,000 Customer Feature Vectors</p>
+                        </div>
+                        <div class="pill-group">
+                            <span class="pill-badge active">PCA Component 1 & 2</span>
+                            <span class="pill-badge">Color Code: K-Means Persona</span>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper-large">
+                        <canvas id="pcaScatterChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: ALGORITHM BENCHMARKS -->
+            <section id="tab-benchmark" class="tab-content">
+                <div class="glass-card">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-scale-balanced"></i> Clustering Algorithm Evaluation Matrix</h2>
+                        <p class="card-sub">Comparative analysis evaluating silhouette score, separation, and density noise.</p>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table" id="benchmark-table">
+                            <thead>
+                                <tr>
+                                    <th>Algorithm</th>
+                                    <th>Clusters Identified</th>
+                                    <th>Outliers / Noise</th>
+                                    <th>Silhouette Score (Higher Better)</th>
+                                    <th>Davies-Bouldin Index (Lower Better)</th>
+                                    <th>Calinski-Harabasz Index (Higher Better)</th>
+                                    <th>Performance Rating</th>
+                                </tr>
+                            </thead>
+                            <tbody id="benchmark-tbody">
+                                <!-- Rendered dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 5: LIVE PREDICTOR TOOL -->
+            <section id="tab-predictor" class="tab-content">
+                <div class="grid-2col">
+                    <!-- Form Input -->
+                    <div class="glass-card form-card">
+                        <div class="card-header">
+                            <h2><i class="fa-solid fa-sliders"></i> Real-Time Customer Predictor</h2>
+                            <p class="card-sub">Enter customer parameters to instantly classify their segment & strategy.</p>
+                        </div>
+                        <form id="predictor-form">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Recency (Days since last purchase)</label>
+                                    <input type="number" id="pred-recency" value="15" min="1" max="365" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Frequency (Orders in last 12 mo)</label>
+                                    <input type="number" id="pred-frequency" value="42" min="1" max="200" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Monetary Spend ($ USD)</label>
+                                    <input type="number" step="0.01" id="pred-monetary" value="5200.00" min="1" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Category Diversity (1-10)</label>
+                                    <input type="number" id="pred-category" value="7" min="1" max="10" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Engagement Score (1-100)</label>
+                                    <input type="number" step="0.1" id="pred-engagement" value="88.5" min="1" max="100" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Support Tickets Submitted</label>
+                                    <input type="number" id="pred-tickets" value="1" min="0" max="20" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Discount Usage Ratio (0.00 - 1.00)</label>
+                                    <input type="number" step="0.01" id="pred-discount" value="0.15" min="0" max="1" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Return Rate (0.00 - 0.50)</label>
+                                    <input type="number" step="0.01" id="pred-return" value="0.03" min="0" max="0.5" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block"><i class="fa-solid fa-sparkles"></i> Classify Customer Persona</button>
+                        </form>
+                    </div>
+
+                    <!-- Prediction Result Display -->
+                    <div class="glass-card result-card" id="result-card">
+                        <div class="result-placeholder">
+                            <i class="fa-solid fa-robot placeholder-icon"></i>
+                            <h3>Awaiting Customer Input</h3>
+                            <p>Fill out the customer behavioral attributes and click classify to generate ML prediction.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/static/js/charts.js"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
