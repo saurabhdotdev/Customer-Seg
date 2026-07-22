@@ -99,6 +99,17 @@
                             <option value="AED">AED (AED)</option>
                         </select>
                     </div>
+                    <!-- User Auth Button / Profile Badge -->
+                    <div id="user-auth-wrap" style="display:flex; align-items:center; gap:8px;">
+                        <button class="btn btn-secondary" id="btn-open-auth" style="background:rgba(59,130,246,0.15); border-color:rgba(59,130,246,0.3); color:#60A5FA;">
+                            <i class="fa-solid fa-user-lock"></i> <span id="auth-btn-label">Sign In / Register</span>
+                        </button>
+                        <div id="user-profile-badge" style="display:none; align-items:center; gap:8px; background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.3); padding:6px 12px; border-radius:8px;">
+                            <i class="fa-solid fa-circle-user" style="color:#10B981; font-size:18px;"></i>
+                            <span id="user-name-display" style="font-size:13px; font-weight:700; color:#FFF;">User</span>
+                            <button id="btn-logout" title="Sign Out" style="background:none; border:none; color:#EF4444; cursor:pointer; font-size:14px; margin-left:4px;"><i class="fa-solid fa-right-from-bracket"></i></button>
+                        </div>
+                    </div>
                     <button class="btn btn-secondary" id="btn-refresh"><i class="fa-solid fa-rotate"></i> Refresh Data</button>
                     <button class="btn btn-primary" id="btn-export"><i class="fa-solid fa-download"></i> Export Segment Data</button>
                 </div>
@@ -745,6 +756,60 @@
                 </div>
             </section>
         </main>
+    </div>
+
+    <!-- AUTHENTICATION MODAL -->
+    <div id="auth-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); backdrop-filter:blur(6px); z-index:99999; justify-content:center; align-items:center;">
+        <div class="glass-card" style="width:420px; max-width:90%; padding:28px; position:relative; border:1px solid rgba(255,255,255,0.15);">
+            <button id="btn-close-auth-modal" style="position:absolute; top:16px; right:16px; background:none; border:none; color:#9CA3AF; font-size:18px; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+            
+            <div style="text-align:center; margin-bottom:20px;">
+                <div style="width:48px; height:48px; border-radius:12px; background:linear-gradient(135deg, #3B82F6, #10B981); display:inline-flex; align-items:center; justify-content:center; margin-bottom:10px;">
+                    <i class="fa-solid fa-shield-halved" style="font-size:22px; color:#FFF;"></i>
+                </div>
+                <h2 style="font-size:20px; font-weight:800; color:#FFF; margin-bottom:4px;">Secure Account Access</h2>
+                <p style="font-size:12px; color:#9CA3AF;">Log in or create an account for private multi-tenant workspace security.</p>
+            </div>
+
+            <!-- Tabs -->
+            <div style="display:flex; border-bottom:1px solid rgba(255,255,255,0.1); margin-bottom:20px;">
+                <button id="tab-auth-login" style="flex:1; padding:10px; background:none; border:none; border-bottom:2px solid #3B82F6; color:#FFF; font-weight:700; font-size:14px; cursor:pointer;">Sign In</button>
+                <button id="tab-auth-register" style="flex:1; padding:10px; background:none; border:none; border-bottom:2px solid transparent; color:#9CA3AF; font-weight:600; font-size:14px; cursor:pointer;">Register Account</button>
+            </div>
+
+            <!-- Form Error Alert -->
+            <div id="auth-alert" style="display:none; padding:10px 14px; border-radius:8px; font-size:13px; margin-bottom:16px; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:#F87171;"></div>
+
+            <!-- Sign In Form -->
+            <form id="form-auth-login">
+                <div class="form-group mb-3">
+                    <label style="display:block; font-size:12px; color:#9CA3AF; margin-bottom:6px;">Email Address</label>
+                    <input type="email" id="login-email" required placeholder="user@domain.com" style="width:100%; padding:10px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:#FFF; font-size:14px;">
+                </div>
+                <div class="form-group mb-4">
+                    <label style="display:block; font-size:12px; color:#9CA3AF; margin-bottom:6px;">Password</label>
+                    <input type="password" id="login-password" required placeholder="••••••••" style="width:100%; padding:10px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:#FFF; font-size:14px;">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block" style="padding:12px; font-size:15px; background:linear-gradient(135deg, #3B82F6, #1D4ED8);"><i class="fa-solid fa-right-to-bracket"></i> Sign In to Account</button>
+            </form>
+
+            <!-- Register Form -->
+            <form id="form-auth-register" style="display:none;">
+                <div class="form-group mb-3">
+                    <label style="display:block; font-size:12px; color:#9CA3AF; margin-bottom:6px;">Full Name</label>
+                    <input type="text" id="reg-name" required placeholder="Alex Mercer" style="width:100%; padding:10px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:#FFF; font-size:14px;">
+                </div>
+                <div class="form-group mb-3">
+                    <label style="display:block; font-size:12px; color:#9CA3AF; margin-bottom:6px;">Email Address</label>
+                    <input type="email" id="reg-email" required placeholder="alex@domain.com" style="width:100%; padding:10px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:#FFF; font-size:14px;">
+                </div>
+                <div class="form-group mb-4">
+                    <label style="display:block; font-size:12px; color:#9CA3AF; margin-bottom:6px;">Create Password</label>
+                    <input type="password" id="reg-password" required minlength="4" placeholder="••••••••" style="width:100%; padding:10px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:#FFF; font-size:14px;">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block" style="padding:12px; font-size:15px; background:linear-gradient(135deg, #10B981, #059669);"><i class="fa-solid fa-user-plus"></i> Create Private Account</button>
+            </form>
+        </div>
     </div>
 
     <!-- Scripts -->

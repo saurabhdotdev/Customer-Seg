@@ -1,0 +1,16 @@
+{
+  "testuser@example.com": {
+    "user_id": "usr_b538204623e0",
+    "email": "testuser@example.com",
+    "name": "Demo User",
+    "password": "3e98efea0441c7ca32a11bce6ce126c6:e650ad2cdbcd8a0579c3b6aa474adb6c87d9f7e4d5513257dad980e462bad29c",
+    "created_at": "2026-07-22T15:45:14.519595+00:00"
+  },
+  "unittest_2aa97661@example.com": {
+    "user_id": "usr_ee5d61c79824",
+    "email": "unittest_2aa97661@example.com",
+    "name": "Test User",
+    "password": "e4f64ed504544942f9b3613048c338f0:f7b748327799ae069fd3c5d3da3f4c14f029453b34478e2c74bdefd033a0af45",
+    "created_at": "2026-07-22T15:46:16.217146+00:00"
+  }
+}

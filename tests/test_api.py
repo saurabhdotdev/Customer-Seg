@@ -1,3 +1,4 @@
+import secrets
 import pytest
 from fastapi.testclient import TestClient
 from backend.main import app
@@ -93,3 +94,25 @@ def test_api_simulator_endpoint():
     assert "recovered_revenue" in data
     assert "rescued_customers" in data
     assert "roi_factor" in data
+
+def test_api_auth_register_login_me():
+    email = f"unittest_{secrets.token_hex(4)}@example.com"
+    reg = client.post("/api/auth/register", json={
+        "name": "Test User",
+        "email": email,
+        "password": "mysecretpassword123"
+    })
+    assert reg.status_code == 200
+    token = reg.json()["access_token"]
+    assert token is not None
+
+    login = client.post("/api/auth/login", json={
+        "email": email,
+        "password": "mysecretpassword123"
+    })
+    assert login.status_code == 200
+    assert login.json()["access_token"] is not None
+
+    me = client.get("/api/auth/me", headers={"Authorization": f"Bearer {token}"})
+    assert me.status_code == 200
+    assert me.json()["email"] == email

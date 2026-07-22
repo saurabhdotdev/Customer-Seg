@@ -3,7 +3,7 @@ import json
 import joblib
 import numpy as np
 import pandas as pd
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, File, HTTPException, UploadFile, Depends
 from fastapi.responses import PlainTextResponse, FileResponse
 from pydantic import BaseModel
 from backend.config import DATA_RAW_PATH, DATA_SEGMENTS_PATH, METADATA_PATH, SCALER_PATH, KMEANS_MODEL_PATH, CLASSIFIER_PATH, LTV_REGRESSOR_PATH, PCA_PATH, BASE_DATA_SEGMENTS, BASE_METADATA_PATH, get_existing_path
@@ -35,6 +35,12 @@ from src.data.preprocessor import CustomerDataPreprocessor
 from src.visualization.dimensionality import DimensionalityReducer
 from src.insights.persona_generator import CustomerPersonaGenerator
 from src.insights.query_engine import CustomerAnalyticsQueryEngine
+import secrets
+from datetime import datetime, timezone
+from backend.api.auth import (
+    hash_password, verify_password, load_users, save_users,
+    create_jwt_token, get_current_user_optional, get_current_user_required
+)
 from src.insights.segment_intelligence import SegmentIntelligenceEngine, RetentionSimulatorEngine
 from src.insights.cohort_engine import CustomerCohortEngine
 from src.insights.rfm_engine import RFMAnalyticsEngine
@@ -43,6 +49,84 @@ from src.models.ltv_regressor import CustomerLTVRegressor
 from src.pipeline.training import REQUIRED_COLUMNS, train_customer_segmentation_pipeline
 
 router = APIRouter()
+
+class RegisterRequestSchema(BaseModel):
+    name: str
+    email: str
+    password: str
+
+class LoginRequestSchema(BaseModel):
+    email: str
+    password: str
+
+@router.post("/auth/register")
+def register_user(req: RegisterRequestSchema):
+    email_clean = req.email.strip().lower()
+    if not email_clean or "@" not in email_clean:
+        raise HTTPException(status_code=400, detail="Please provide a valid email address.")
+    if len(req.password) < 4:
+        raise HTTPException(status_code=400, detail="Password must be at least 4 characters long.")
+
+    users = load_users()
+    if email_clean in users:
+        raise HTTPException(status_code=400, detail="An account with this email already exists. Please log in.")
+
+    user_id = f"usr_{secrets.token_hex(6)}"
+    hashed_pwd = hash_password(req.password)
+
+    user_obj = {
+        "user_id": user_id,
+        "email": email_clean,
+        "name": req.name.strip(),
+        "password": hashed_pwd,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+
+    users[email_clean] = user_obj
+    save_users(users)
+
+    token = create_jwt_token(user_id=user_id, email=email_clean, name=user_obj["name"])
+
+    return {
+        "status": "registered",
+        "access_token": token,
+        "token_type": "bearer",
+        "user": {
+            "user_id": user_id,
+            "email": email_clean,
+            "name": user_obj["name"]
+        }
+    }
+
+@router.post("/auth/login")
+def login_user(req: LoginRequestSchema):
+    email_clean = req.email.strip().lower()
+    users = load_users()
+
+    user_obj = users.get(email_clean)
+    if not user_obj or not verify_password(req.password, user_obj["password"]):
+        raise HTTPException(status_code=401, detail="Invalid email or password.")
+
+    token = create_jwt_token(user_id=user_obj["user_id"], email=email_clean, name=user_obj["name"])
+
+    return {
+        "status": "authenticated",
+        "access_token": token,
+        "token_type": "bearer",
+        "user": {
+            "user_id": user_obj["user_id"],
+            "email": email_clean,
+            "name": user_obj["name"]
+        }
+    }
+
+@router.get("/auth/me")
+def get_user_profile(user: dict = Depends(get_current_user_required)):
+    return {
+        "user_id": user["sub"],
+        "email": user["email"],
+        "name": user["name"]
+    }
 
 class SimulationRequestSchema(BaseModel):
     engagement_boost_pct: float = 15.0

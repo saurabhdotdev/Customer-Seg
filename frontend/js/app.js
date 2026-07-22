@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCohortFilter();
     initCampaignExport();
     initSimulatorTool();
+    initAuthModule();
 
     document.getElementById('btn-refresh').addEventListener('click', () => {
         checkDatasetStatus();
@@ -982,5 +983,160 @@ function initSimulatorTool() {
     // Initial run
     updateLabelDisplays();
     runSimulation();
+}
+
+/* AUTHENTICATION & MULTI-TENANT ACCOUNT MODULE */
+function getAuthHeaders() {
+    const token = localStorage.getItem('customer_seg_token');
+    const headers = {};
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+    return headers;
+}
+
+function initAuthModule() {
+    const btnOpenAuth = document.getElementById('btn-open-auth');
+    const btnCloseAuth = document.getElementById('btn-close-auth-modal');
+    const authModal = document.getElementById('auth-modal');
+    const tabLogin = document.getElementById('tab-auth-login');
+    const tabRegister = document.getElementById('tab-auth-register');
+    const formLogin = document.getElementById('form-auth-login');
+    const formRegister = document.getElementById('form-auth-register');
+    const authAlert = document.getElementById('auth-alert');
+
+    const userProfileBadge = document.getElementById('user-profile-badge');
+    const userNameDisplay = document.getElementById('user-name-display');
+    const btnLogout = document.getElementById('btn-logout');
+
+    if (!btnOpenAuth || !authModal) return;
+
+    function showAuthModal() {
+        authAlert.style.display = 'none';
+        authModal.style.display = 'flex';
+    }
+
+    function hideAuthModal() {
+        authModal.style.display = 'none';
+    }
+
+    btnOpenAuth.addEventListener('click', showAuthModal);
+    btnCloseAuth.addEventListener('click', hideAuthModal);
+
+    tabLogin.addEventListener('click', () => {
+        tabLogin.style.borderBottomColor = '#3B82F6';
+        tabLogin.style.color = '#FFF';
+        tabRegister.style.borderBottomColor = 'transparent';
+        tabRegister.style.color = '#9CA3AF';
+        formLogin.style.display = 'block';
+        formRegister.style.display = 'none';
+        authAlert.style.display = 'none';
+    });
+
+    tabRegister.addEventListener('click', () => {
+        tabRegister.style.borderBottomColor = '#10B981';
+        tabRegister.style.color = '#FFF';
+        tabLogin.style.borderBottomColor = 'transparent';
+        tabLogin.style.color = '#9CA3AF';
+        formRegister.style.display = 'block';
+        formLogin.style.display = 'none';
+        authAlert.style.display = 'none';
+    });
+
+    formLogin.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+
+        try {
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                authAlert.innerText = data.detail || 'Sign in failed. Please check credentials.';
+                authAlert.style.display = 'block';
+                return;
+            }
+
+            localStorage.setItem('customer_seg_token', data.access_token);
+            hideAuthModal();
+            checkUserSession();
+        } catch (err) {
+            authAlert.innerText = 'Network error during sign in.';
+            authAlert.style.display = 'block';
+        }
+    });
+
+    formRegister.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('reg-name').value;
+        const email = document.getElementById('reg-email').value;
+        const password = document.getElementById('reg-password').value;
+
+        try {
+            const res = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, password })
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                authAlert.innerText = data.detail || 'Registration failed.';
+                authAlert.style.display = 'block';
+                return;
+            }
+
+            localStorage.setItem('customer_seg_token', data.access_token);
+            hideAuthModal();
+            checkUserSession();
+        } catch (err) {
+            authAlert.innerText = 'Network error during registration.';
+            authAlert.style.display = 'block';
+        }
+    });
+
+    if (btnLogout) {
+        btnLogout.addEventListener('click', () => {
+            localStorage.removeItem('customer_seg_token');
+            checkUserSession();
+            alert("Signed out successfully!");
+        });
+    }
+
+    async function checkUserSession() {
+        const token = localStorage.getItem('customer_seg_token');
+        if (!token) {
+            btnOpenAuth.style.display = 'inline-flex';
+            userProfileBadge.style.display = 'none';
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/auth/me', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!res.ok) {
+                localStorage.removeItem('customer_seg_token');
+                btnOpenAuth.style.display = 'inline-flex';
+                userProfileBadge.style.display = 'none';
+                return;
+            }
+
+            const user = await res.json();
+            btnOpenAuth.style.display = 'none';
+            userNameDisplay.innerText = user.name;
+            userProfileBadge.style.display = 'inline-flex';
+        } catch (err) {
+            console.error("Session verification error:", err);
+        }
+    }
+
+    checkUserSession();
 }
 
