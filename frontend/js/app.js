@@ -456,8 +456,8 @@ async function checkDatasetStatus() {
         if (!res.ok) return;
         const status = await res.json();
 
-        nameEl.innerText = `${status.display_name} (${status.total_samples.toLocaleString()} Customers)`;
         if (status.is_custom) {
+            nameEl.innerText = `${status.display_name} (${status.total_samples.toLocaleString()} Customers)`;
             badgeEl.innerText = "Custom User Dataset";
             badgeEl.style.background = "rgba(16, 185, 129, 0.15)";
             badgeEl.style.color = "#10B981";
@@ -465,6 +465,7 @@ async function checkDatasetStatus() {
             if (dotEl) dotEl.style.background = "#10B981";
             if (resetBtn) resetBtn.style.display = "inline-flex";
         } else {
+            nameEl.innerText = status.display_name;
             badgeEl.innerText = "Baseline Demo";
             badgeEl.style.background = "rgba(59, 130, 246, 0.15)";
             badgeEl.style.color = "#60A5FA";
