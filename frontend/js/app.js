@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initSimulatorTool();
     initAuthModule();
     initPdfExporter();
+    initGuidedTourAndPresets();
 
     document.getElementById('btn-refresh').addEventListener('click', () => {
         checkDatasetStatus();
@@ -1248,5 +1249,37 @@ function initAuthModule() {
     }
 
     checkUserSession();
+}
+
+function initGuidedTourAndPresets() {
+    const btnGuide = document.getElementById('btn-quick-guide');
+    const modalTour = document.getElementById('guided-tour-modal');
+    const btnCloseTour = document.getElementById('btn-close-tour');
+    const btnFinishTour = document.getElementById('btn-finish-tour');
+
+    if (btnGuide && modalTour) {
+        btnGuide.addEventListener('click', () => { modalTour.style.display = 'flex'; });
+        if (btnCloseTour) btnCloseTour.addEventListener('click', () => { modalTour.style.display = 'none'; });
+        if (btnFinishTour) btnFinishTour.addEventListener('click', () => { modalTour.style.display = 'none'; });
+    }
+
+    // Preset buttons binding
+    const presetBtns = document.querySelectorAll('.btn-preset');
+    presetBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.getElementById('sb-spend').value = btn.getAttribute('data-spend');
+            document.getElementById('sb-recency').value = btn.getAttribute('data-recency');
+            document.getElementById('sb-frequency').value = btn.getAttribute('data-freq');
+            document.getElementById('sb-discount').value = btn.getAttribute('data-disc');
+            document.getElementById('sb-return').value = btn.getAttribute('data-ret');
+            document.getElementById('sb-engagement').value = btn.getAttribute('data-eng');
+            
+            // Trigger sandbox submission
+            const sandboxForm = document.getElementById('sandbox-form');
+            if (sandboxForm) {
+                sandboxForm.dispatchEvent(new Event('submit'));
+            }
+        });
+    });
 }
 
