@@ -35,7 +35,7 @@ from src.data.preprocessor import CustomerDataPreprocessor
 from src.visualization.dimensionality import DimensionalityReducer
 from src.insights.persona_generator import CustomerPersonaGenerator
 from src.insights.query_engine import CustomerAnalyticsQueryEngine
-from src.insights.segment_intelligence import SegmentIntelligenceEngine
+from src.insights.segment_intelligence import SegmentIntelligenceEngine, RetentionSimulatorEngine
 from src.insights.cohort_engine import CustomerCohortEngine
 from src.insights.rfm_engine import RFMAnalyticsEngine
 from src.models.classifier import SegmentClassifierModel
@@ -43,6 +43,25 @@ from src.models.ltv_regressor import CustomerLTVRegressor
 from src.pipeline.training import REQUIRED_COLUMNS, train_customer_segmentation_pipeline
 
 router = APIRouter()
+
+class SimulationRequestSchema(BaseModel):
+    engagement_boost_pct: float = 15.0
+    ticket_reduction: float = 2.0
+    discount_incentive_pct: float = 10.0
+    email_touchpoints: int = 2
+    target_cohort: str = "all"
+
+@router.post("/simulator/simulate")
+def run_retention_simulation(req: SimulationRequestSchema):
+    df = get_active_df()
+    return RetentionSimulatorEngine.run_simulation(
+        df=df,
+        engagement_boost_pct=req.engagement_boost_pct,
+        ticket_reduction=req.ticket_reduction,
+        discount_incentive_pct=req.discount_incentive_pct,
+        email_touchpoints=req.email_touchpoints,
+        target_cohort=req.target_cohort
+    )
 
 class AnalyticsQueryRequest(BaseModel):
     query: str

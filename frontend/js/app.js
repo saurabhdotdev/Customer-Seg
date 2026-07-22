@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initSandboxTesting();
     initCohortFilter();
     initCampaignExport();
+    initSimulatorTool();
 
     document.getElementById('btn-refresh').addEventListener('click', () => {
         checkDatasetStatus();
@@ -886,5 +887,100 @@ function initCampaignExport() {
             alert("Campaign copy copied to clipboard!");
         });
     }
+}
+
+/* Revenue & Churn Simulator Interactive Handler */
+function initSimulatorTool() {
+    const targetCohort = document.getElementById('sim-target-cohort');
+    const engagementBoost = document.getElementById('sim-engagement-boost');
+    const ticketReduction = document.getElementById('sim-ticket-reduction');
+    const discountIncentive = document.getElementById('sim-discount-incentive');
+    const emailTouchpoints = document.getElementById('sim-email-touchpoints');
+
+    const engagementVal = document.getElementById('sim-engagement-val');
+    const ticketVal = document.getElementById('sim-ticket-val');
+    const discountVal = document.getElementById('sim-discount-val');
+    const emailVal = document.getElementById('sim-email-val');
+
+    const btnRun = document.getElementById('btn-run-simulation');
+
+    const recoveredRevenueEl = document.getElementById('sim-recovered-revenue');
+    const roiBadgeEl = document.getElementById('sim-roi-badge');
+    const rescuedCountEl = document.getElementById('sim-rescued-count');
+    const churnDiffBadgeEl = document.getElementById('sim-churn-diff-badge');
+    const churnCompEl = document.getElementById('sim-churn-comparison');
+    const campaignCostEl = document.getElementById('sim-campaign-cost');
+    const netValueEl = document.getElementById('sim-net-value');
+    const summaryEl = document.getElementById('sim-actionable-summary');
+
+    if (!btnRun) return;
+
+    async function runSimulation() {
+        const payload = {
+            target_cohort: targetCohort.value,
+            engagement_boost_pct: parseFloat(engagementBoost.value),
+            ticket_reduction: parseFloat(ticketReduction.value),
+            discount_incentive_pct: parseFloat(discountIncentive.value),
+            email_touchpoints: parseInt(emailTouchpoints.value)
+        };
+
+        try {
+            const res = await fetch('/api/simulator/simulate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) return;
+            const data = await res.json();
+
+            const currency = window.globalCurrency || 'USD';
+            const rate = currencyRates[currency] || 1.0;
+            const symbol = currencySymbols[currency] || '$';
+
+            const recovered = data.recovered_revenue * rate;
+            const cost = data.total_campaign_cost * rate;
+            const net = data.net_value_generated * rate;
+
+            recoveredRevenueEl.innerText = `${symbol}${recovered.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            roiBadgeEl.innerText = `Est. ROI: ${data.roi_factor}x Return`;
+            rescuedCountEl.innerText = data.rescued_customers.toLocaleString();
+            churnDiffBadgeEl.innerText = `Churn Rate Drop: -${data.churn_reduction_pct}%`;
+            churnCompEl.innerText = `${(data.initial_avg_churn * 100).toFixed(1)}% ➔ ${(data.simulated_avg_churn * 100).toFixed(1)}%`;
+            campaignCostEl.innerText = `${symbol}${cost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            netValueEl.innerText = `${symbol}${net.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+            summaryEl.innerHTML = `By applying a <strong>+${data.parameters.engagement_boost_pct}% engagement boost</strong> and <strong>-${data.parameters.ticket_reduction} support ticket reduction</strong> to ${data.target_audience_count.toLocaleString()} target customers, you can rescue <strong>${data.rescued_customers} high-risk customers</strong> and recover <strong>${symbol}${recovered.toLocaleString(undefined, {minimumFractionDigits: 2})}</strong> in annual LTV with a net ROI of <strong>${data.roi_factor}x</strong>!`;
+        } catch (err) {
+            console.error("Simulation failed:", err);
+        }
+    }
+
+    function updateLabelDisplays() {
+        if (engagementBoost && engagementVal) engagementVal.innerText = `+${engagementBoost.value}%`;
+        if (ticketReduction && ticketVal) ticketVal.innerText = `-${ticketReduction.value} Tickets`;
+        if (discountIncentive && discountVal) discountVal.innerText = `${discountIncentive.value}% Credit`;
+        if (emailTouchpoints && emailVal) emailVal.innerText = `${emailTouchpoints.value} Touchpoints`;
+    }
+
+    const inputs = [targetCohort, engagementBoost, ticketReduction, discountIncentive, emailTouchpoints];
+    inputs.forEach(inp => {
+        if (inp) {
+            inp.addEventListener('input', () => {
+                updateLabelDisplays();
+                runSimulation();
+            });
+            inp.addEventListener('change', () => {
+                updateLabelDisplays();
+                runSimulation();
+            });
+        }
+    });
+
+    if (btnRun) btnRun.addEventListener('click', runSimulation);
+
+    // Initial run
+    updateLabelDisplays();
+    runSimulation();
 }
 

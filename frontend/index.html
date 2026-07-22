@@ -58,6 +58,9 @@
                 <a href="#benchmark" class="nav-item" data-tab="tab-benchmark">
                     <i class="fa-solid fa-layer-group"></i> <span>Algorithm Benchmarks</span>
                 </a>
+                <a href="#simulator" class="nav-item" data-tab="tab-simulator">
+                    <i class="fa-solid fa-sliders"></i> <span>Revenue & Churn Simulator</span>
+                </a>
                 <a href="#predictor" class="nav-item" data-tab="tab-predictor">
                     <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Live Predictor Tool</span>
                 </a>
@@ -566,6 +569,119 @@
                                 <!-- Rendered dynamically -->
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: REVENUE & CHURN SIMULATOR -->
+            <section id="tab-simulator" class="tab-content">
+                <div class="glass-card mb-4" style="border-left: 4px solid #10B981;">
+                    <div class="card-header">
+                        <div>
+                            <h2><i class="fa-solid fa-sliders" style="color:#10B981;"></i> Retention Strategy & Revenue Simulator</h2>
+                            <p class="card-sub">Simulate what-if marketing interventions, ticket response improvements, and loyalty incentives to calculate recovered annual revenue and churn reduction.</p>
+                        </div>
+                        <span class="pill-badge active" style="background:rgba(16, 185, 129, 0.15); color:#10B981;"><i class="fa-solid fa-bolt"></i> Live Real-Time Simulator</span>
+                    </div>
+                </div>
+
+                <div class="grid-2col" style="grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap:24px;">
+                    <!-- Simulator Controls -->
+                    <div class="glass-card">
+                        <div class="card-header" style="margin-bottom:20px;">
+                            <h3><i class="fa-solid fa-sliders"></i> What-If Strategy Parameters</h3>
+                            <p class="card-sub">Adjust parameters to model target retention campaigns.</p>
+                        </div>
+
+                        <div class="sim-group mb-4">
+                            <label style="display:flex; justify-content:space-between; color:#9CA3AF; font-size:13px; font-weight:600; margin-bottom:8px;">
+                                <span>🎯 Target Customer Cohort</span>
+                                <span id="sim-target-val" style="color:#3B82F6;">All Customers</span>
+                            </label>
+                            <select id="sim-target-cohort" style="width:100%; padding:10px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:#FFF; font-size:14px;">
+                                <option value="all">All Customers in Dataset</option>
+                                <option value="at_risk" selected>At-Risk Cohort (Churn Risk ≥ 50%)</option>
+                                <option value="high_value_risk">High-Value At-Risk VIPs</option>
+                                <option value="lost">Lost & Inactive Customers (Recency ≥ 90 Days)</option>
+                            </select>
+                        </div>
+
+                        <div class="sim-group mb-4">
+                            <label style="display:flex; justify-content:space-between; color:#9CA3AF; font-size:13px; font-weight:600; margin-bottom:8px;">
+                                <span>⚡ Engagement Boost (%)</span>
+                                <span id="sim-engagement-val" style="color:#10B981; font-weight:700;">+20%</span>
+                            </label>
+                            <input type="range" id="sim-engagement-boost" min="0" max="50" value="20" step="5" style="width:100%; accent-color:#10B981;">
+                        </div>
+
+                        <div class="sim-group mb-4">
+                            <label style="display:flex; justify-content:space-between; color:#9CA3AF; font-size:13px; font-weight:600; margin-bottom:8px;">
+                                <span>🎧 Support Ticket Reduction</span>
+                                <span id="sim-ticket-val" style="color:#60A5FA; font-weight:700;">-2 Tickets</span>
+                            </label>
+                            <input type="range" id="sim-ticket-reduction" min="0" max="5" value="2" step="1" style="width:100%; accent-color:#60A5FA;">
+                        </div>
+
+                        <div class="sim-group mb-4">
+                            <label style="display:flex; justify-content:space-between; color:#9CA3AF; font-size:13px; font-weight:600; margin-bottom:8px;">
+                                <span>🎁 Retention Loyalty Credit (%)</span>
+                                <span id="sim-discount-val" style="color:#F59E0B; font-weight:700;">10% Credit</span>
+                            </label>
+                            <input type="range" id="sim-discount-incentive" min="0" max="30" value="10" step="5" style="width:100%; accent-color:#F59E0B;">
+                        </div>
+
+                        <div class="sim-group mb-4">
+                            <label style="display:flex; justify-content:space-between; color:#9CA3AF; font-size:13px; font-weight:600; margin-bottom:8px;">
+                                <span>✉️ Re-Engagement Touchpoints / Mo</span>
+                                <span id="sim-email-val" style="color:#A855F7; font-weight:700;">3 Touchpoints</span>
+                            </label>
+                            <input type="range" id="sim-email-touchpoints" min="0" max="5" value="3" step="1" style="width:100%; accent-color:#A855F7;">
+                        </div>
+
+                        <button id="btn-run-simulation" class="btn btn-primary btn-block" style="background:linear-gradient(135deg, #10B981, #059669); font-size:15px; padding:12px;"><i class="fa-solid fa-play"></i> Recalculate Simulation Impact</button>
+                    </div>
+
+                    <!-- Simulation Results KPI Output -->
+                    <div class="glass-card" style="display:flex; flex-direction:column; justify-content:space-between;">
+                        <div>
+                            <div class="card-header" style="margin-bottom:20px;">
+                                <h3><i class="fa-solid fa-chart-line" style="color:#10B981;"></i> Simulated Impact & ROI Analysis</h3>
+                                <p class="card-sub">Projected customer retention & financial recovery outcomes.</p>
+                            </div>
+
+                            <div class="sim-kpi-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px;">
+                                <div style="background:rgba(16, 185, 129, 0.1); border:1px solid rgba(16, 185, 129, 0.25); border-radius:12px; padding:16px; text-align:center;">
+                                    <span style="font-size:12px; text-transform:uppercase; letter-spacing:0.05em; color:#10B981; font-weight:700;">Recovered Annual Revenue</span>
+                                    <div id="sim-recovered-revenue" style="font-size:26px; font-weight:800; color:#FFF; margin-top:6px;">$0.00</div>
+                                    <span id="sim-roi-badge" style="font-size:11px; color:#A7F3D0; margin-top:4px; display:block;">Est. ROI: 0.0x</span>
+                                </div>
+                                <div style="background:rgba(59, 130, 246, 0.1); border:1px solid rgba(59, 130, 246, 0.25); border-radius:12px; padding:16px; text-align:center;">
+                                    <span style="font-size:12px; text-transform:uppercase; letter-spacing:0.05em; color:#60A5FA; font-weight:700;">Rescued High-Risk Customers</span>
+                                    <div id="sim-rescued-count" style="font-size:26px; font-weight:800; color:#FFF; margin-top:6px;">0</div>
+                                    <span id="sim-churn-diff-badge" style="font-size:11px; color:#93C5FD; margin-top:4px; display:block;">Churn Rate Drop: -0.0%</span>
+                                </div>
+                            </div>
+
+                            <div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:16px; margin-bottom:20px;">
+                                <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:8px;">
+                                    <span style="color:#9CA3AF;">Average Churn Risk:</span>
+                                    <span id="sim-churn-comparison" style="font-weight:700; color:#FFF;">0.0% ➔ 0.0%</span>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:8px;">
+                                    <span style="color:#9CA3AF;">Estimated Retention Campaign Cost:</span>
+                                    <span id="sim-campaign-cost" style="font-weight:700; color:#EF4444;">$0.00</span>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; font-size:13px;">
+                                    <span style="color:#9CA3AF;">Net Value Generated:</span>
+                                    <span id="sim-net-value" style="font-weight:700; color:#10B981;">$0.00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="background:rgba(16, 185, 129, 0.08); border:1px dashed rgba(16, 185, 129, 0.3); border-radius:10px; padding:14px;">
+                            <h4 style="font-size:13px; color:#10B981; font-weight:700; margin-bottom:4px;"><i class="fa-solid fa-lightbulb"></i> Actionable Strategy Recommendation</h4>
+                            <p id="sim-actionable-summary" style="font-size:12px; color:#D1D5DB; margin:0; line-height:1.5;">Adjust sliders to calculate optimal campaign investment vs. recovered customer LTV.</p>
+                        </div>
                     </div>
                 </div>
             </section>

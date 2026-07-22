@@ -188,3 +188,98 @@ class SegmentIntelligenceEngine:
             "GENERAL": "Click-through rate and revenue per send",
         }
         return metrics.get(persona_key, metrics["GENERAL"])
+
+
+class RetentionSimulatorEngine:
+    """
+    Simulates what-if retention strategies and churn mitigation impact.
+    """
+
+    @classmethod
+    def run_simulation(
+        cls,
+        df: pd.DataFrame,
+        engagement_boost_pct: float = 15.0,
+        ticket_reduction: float = 2.0,
+        discount_incentive_pct: float = 10.0,
+        email_touchpoints: int = 2,
+        target_cohort: str = "all",
+    ) -> dict:
+        df_sim = df.copy()
+
+        if target_cohort == "at_risk":
+            mask = df_sim["Churn_Risk_Index"] >= 0.50
+        elif target_cohort == "high_value_risk":
+            mask = (df_sim["Churn_Risk_Index"] >= 0.40) & (
+                df_sim["Monetary_Spend"] >= df_sim["Monetary_Spend"].median()
+            )
+        elif target_cohort == "lost":
+            mask = df_sim["Recency_Days"] >= 90
+        else:
+            mask = pd.Series([True] * len(df_sim), index=df_sim.index)
+
+        if not mask.any():
+            mask = pd.Series([True] * len(df_sim), index=df_sim.index)
+
+        initial_avg_churn = float(df_sim.loc[mask, "Churn_Risk_Index"].mean())
+        initial_high_risk_count = int((df_sim.loc[mask, "Churn_Risk_Index"] >= 0.50).sum())
+        initial_revenue_at_risk = float(
+            (df_sim.loc[mask, "Monetary_Spend"] * df_sim.loc[mask, "Churn_Risk_Index"]).sum()
+        )
+
+        sim_engagement = (
+            df_sim.loc[mask, "Engagement_Score"] * (1.0 + engagement_boost_pct / 100.0)
+        ).clip(upper=100.0)
+        sim_tickets = (df_sim.loc[mask, "Support_Tickets"] - ticket_reduction).clip(lower=0.0)
+
+        rec_factor = (df_sim.loc[mask, "Recency_Days"] / 120.0).clip(upper=1.0)
+        freq_factor = (1.0 - (df_sim.loc[mask, "Frequency_Orders"] / 20.0)).clip(lower=0.0)
+        eng_factor = (1.0 - (sim_engagement / 100.0)).clip(lower=0.0)
+        support_factor = (sim_tickets / 5.0).clip(upper=1.0)
+
+        touchpoint_mitigation = max(0.0, min(0.20, email_touchpoints * 0.05))
+
+        sim_churn = (
+            0.40 * rec_factor * (1.0 - touchpoint_mitigation)
+            + 0.30 * freq_factor
+            + 0.20 * eng_factor
+            + 0.10 * support_factor
+        ).clip(0.0, 1.0).round(3)
+
+        sim_avg_churn = float(sim_churn.mean())
+        sim_high_risk_count = int((sim_churn >= 0.50).sum())
+        sim_revenue_at_risk = float((df_sim.loc[mask, "Monetary_Spend"] * sim_churn).sum())
+
+        rescued_customers = initial_high_risk_count - sim_high_risk_count
+        recovered_revenue = initial_revenue_at_risk - sim_revenue_at_risk
+
+        avg_spend_target = float(df_sim.loc[mask, "Monetary_Spend"].mean()) if mask.any() else 500.0
+        campaign_cost_per_cust = (avg_spend_target * (discount_incentive_pct / 100.0)) + (
+            email_touchpoints * 0.50
+        )
+        total_campaign_cost = float(mask.sum() * campaign_cost_per_cust)
+        net_value_generated = recovered_revenue - total_campaign_cost
+        roi_factor = (
+            round(recovered_revenue / total_campaign_cost, 2) if total_campaign_cost > 0 else 0.0
+        )
+
+        return {
+            "target_cohort": target_cohort,
+            "target_audience_count": int(mask.sum()),
+            "initial_avg_churn": round(initial_avg_churn, 3),
+            "simulated_avg_churn": round(sim_avg_churn, 3),
+            "churn_reduction_pct": round((initial_avg_churn - sim_avg_churn) * 100.0, 1),
+            "initial_high_risk_count": initial_high_risk_count,
+            "simulated_high_risk_count": sim_high_risk_count,
+            "rescued_customers": max(0, rescued_customers),
+            "recovered_revenue": round(max(0.0, recovered_revenue), 2),
+            "total_campaign_cost": round(total_campaign_cost, 2),
+            "net_value_generated": round(net_value_generated, 2),
+            "roi_factor": roi_factor,
+            "parameters": {
+                "engagement_boost_pct": engagement_boost_pct,
+                "ticket_reduction": ticket_reduction,
+                "discount_incentive_pct": discount_incentive_pct,
+                "email_touchpoints": email_touchpoints,
+            },
+        }

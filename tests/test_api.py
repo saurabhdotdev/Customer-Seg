@@ -78,3 +78,18 @@ def test_api_reports_executive_endpoint():
     response = client.get("/api/reports/executive")
     assert response.status_code == 200
     assert "CUSTOMER INTELLIGENCE EXECUTIVE REPORT" in response.text
+
+def test_api_simulator_endpoint():
+    payload = {
+        "target_cohort": "all",
+        "engagement_boost_pct": 15.0,
+        "ticket_reduction": 2.0,
+        "discount_incentive_pct": 10.0,
+        "email_touchpoints": 2
+    }
+    response = client.post("/api/simulator/simulate", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert "recovered_revenue" in data
+    assert "rescued_customers" in data
+    assert "roi_factor" in data
