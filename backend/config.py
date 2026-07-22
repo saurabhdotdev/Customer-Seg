@@ -29,3 +29,13 @@ METADATA_PATH = os.path.join(MODELS_DIR, "model_metadata.json")
 
 FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
 NOTEBOOKS_DIR = os.path.join(BASE_DIR, "notebooks")
+
+def get_existing_path(target_path: str) -> str:
+    if os.path.exists(target_path):
+        return target_path
+    if IS_VERCEL and target_path.startswith(WORK_DIR):
+        relative = os.path.relpath(target_path, WORK_DIR)
+        fallback = os.path.join(BASE_DIR, relative)
+        if os.path.exists(fallback):
+            return fallback
+    return target_path

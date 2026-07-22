@@ -6,7 +6,7 @@ import pandas as pd
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import PlainTextResponse, FileResponse
 from pydantic import BaseModel
-from backend.config import DATA_RAW_PATH, DATA_SEGMENTS_PATH, METADATA_PATH, SCALER_PATH, KMEANS_MODEL_PATH, CLASSIFIER_PATH, LTV_REGRESSOR_PATH, PCA_PATH, BASE_DATA_SEGMENTS, BASE_METADATA_PATH
+from backend.config import DATA_RAW_PATH, DATA_SEGMENTS_PATH, METADATA_PATH, SCALER_PATH, KMEANS_MODEL_PATH, CLASSIFIER_PATH, LTV_REGRESSOR_PATH, PCA_PATH, BASE_DATA_SEGMENTS, BASE_METADATA_PATH, get_existing_path
 
 def get_active_df() -> pd.DataFrame:
     if os.path.exists(DATA_SEGMENTS_PATH):
@@ -423,34 +423,44 @@ def get_pca3d_data():
 @router.post("/predict", response_model=PredictionResponseSchema)
 @router.post("/segment/predict", response_model=PredictionResponseSchema)
 def predict_customer_segment(customer_input: CustomerInputSchema):
-    if not os.path.exists(SCALER_PATH) or not os.path.exists(PCA_PATH):
-        raise HTTPException(status_code=500, detail="Models or preprocessing pipeline missing.")
+    scaler_file = get_existing_path(SCALER_PATH)
+    pca_file = get_existing_path(PCA_PATH)
+    classifier_file = get_existing_path(CLASSIFIER_PATH)
+    kmeans_file = get_existing_path(KMEANS_MODEL_PATH)
+    ltv_file = get_existing_path(LTV_REGRESSOR_PATH)
         
     preprocessor = CustomerDataPreprocessor()
     input_dict = customer_input.model_dump()
-    X_single = preprocessor.transform_single_customer(input_dict, pipeline_path=SCALER_PATH)
+    X_single = preprocessor.transform_single_customer(input_dict, pipeline_path=scaler_file if os.path.exists(scaler_file) else None)
     
-    with open(METADATA_PATH, 'r') as f:
-        meta = json.load(f)
-        
+    meta = get_active_meta()
+    
     confidence_score = 0.95
-    if os.path.exists(CLASSIFIER_PATH):
-        classifier = joblib.load(CLASSIFIER_PATH)
-        predicted_cluster = int(classifier.predict(X_single)[0])
-        probas = classifier.predict_proba(X_single)[0]
-        confidence_score = float(round(np.max(probas), 4))
-    elif os.path.exists(KMEANS_MODEL_PATH):
-        kmeans_model = joblib.load(KMEANS_MODEL_PATH)
-        predicted_cluster = int(kmeans_model.predict(X_single)[0])
-    else:
+    if os.path.exists(classifier_file):
+        try:
+            classifier = joblib.load(classifier_file)
+            predicted_cluster = int(classifier.predict(X_single)[0])
+            probas = classifier.predict_proba(X_single)[0]
+            confidence_score = float(round(np.max(probas), 4))
+        except Exception:
+            predicted_cluster = 0
+    elif os.path.exists(kmeans_file):
+        try:
+            kmeans_model = joblib.load(kmeans_file)
+            predicted_cluster = int(kmeans_model.predict(X_single)[0])
+        except Exception:
+            predicted_cluster = 0
+    elif meta.get('kmeans_centroids'):
         centroids = np.array(meta['kmeans_centroids'])
         distances = np.linalg.norm(centroids - X_single, axis=1)
         predicted_cluster = int(np.argmin(distances))
+    else:
+        predicted_cluster = 0
     
     reducer = DimensionalityReducer()
-    pca_coord = reducer.transform_single_customer_pca(X_single, pca_path=PCA_PATH)
+    pca_coord = reducer.transform_single_customer_pca(X_single, pca_path=pca_file if os.path.exists(pca_file) else None)
     
-    df = pd.read_csv(DATA_SEGMENTS_PATH)
+    df = get_active_df()
     personas_data = CustomerPersonaGenerator.analyze_clusters(df, cluster_col='KMeans_Cluster')
     
     target_persona = None
@@ -474,9 +484,9 @@ def predict_customer_segment(customer_input: CustomerInputSchema):
     is_anomaly = bool(customer_input.Support_Tickets >= 8 or customer_input.Return_Rate >= 0.25 or customer_input.Discount_Ratio >= 0.90)
 
     predicted_ltv = round(float(customer_input.Monetary_Spend * 1.4), 2)
-    if os.path.exists(LTV_REGRESSOR_PATH):
+    if os.path.exists(ltv_file):
         try:
-            ltv_model = CustomerLTVRegressor.load(LTV_REGRESSOR_PATH)
+            ltv_model = CustomerLTVRegressor.load(ltv_file)
             predicted_ltv = round(float(ltv_model.predict(X_single)[0]), 2)
         except Exception:
             pass
