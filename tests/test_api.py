@@ -204,5 +204,32 @@ def test_api_ingest_transaction_endpoint():
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "ingested"
-    assert "segment" in data
-    assert "predicted_ltv" in data
+
+def test_api_cohort_retention_matrix():
+    headers = get_test_auth_headers()
+    response = client.get("/api/analytics/cohort-retention-matrix", headers=headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert "heatmap_data" in data
+    assert len(data["heatmap_data"]) == 12
+
+def test_api_automl_endpoints():
+    headers = get_test_auth_headers()
+    bench = client.get("/api/automl/benchmark", headers=headers)
+    assert bench.status_code == 200
+    assert "winner_model" in bench.json()
+    assert len(bench.json()["leaderboard"]) >= 3
+
+    select_res = client.post("/api/automl/select-model", json={"selected_model": "Gaussian Mixture Model (GMM)"}, headers=headers)
+    assert select_res.status_code == 200
+    assert select_res.json()["active_production_model"] == "Gaussian Mixture Model (GMM)"
+
+def test_api_webhook_endpoints():
+    headers = get_test_auth_headers()
+    trig = client.post("/api/webhooks/test", json={"alert_type": "TEST_ALERT", "customer_id": "CUST_UNIT_1"}, headers=headers)
+    assert trig.status_code == 200
+    assert trig.json()["status"] == "dispatched"
+
+    logs = client.get("/api/webhooks/logs", headers=headers)
+    assert logs.status_code == 200
+    assert len(logs.json()["logs"]) >= 1

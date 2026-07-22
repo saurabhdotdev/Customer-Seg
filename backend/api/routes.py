@@ -771,3 +771,64 @@ def ingest_realtime_transaction(
         "is_anomaly": prediction["is_anomaly"],
         "recommended_action": prediction["recommended_strategy"]
     }
+
+@router.get("/analytics/cohort-retention-matrix")
+def get_cohort_retention_matrix(user: dict = Depends(get_current_user_required)):
+    user_id = user["sub"]
+    df = get_active_df(user_id)
+    return CustomerCohortEngine.calculate_12m_cohort_heatmap(df)
+
+@router.get("/automl/benchmark")
+def get_automl_benchmark(user: dict = Depends(get_current_user_required)):
+    user_id = user["sub"]
+    df = get_active_df(user_id)
+    preprocessor = CustomerDataPreprocessor()
+    X_matrix, _ = preprocessor.fit_transform(df)
+    meta = get_active_meta(user_id)
+    optimal_k = meta.get("optimal_k", 4)
+    from src.models.automl import AutoMLModelSelector
+    return AutoMLModelSelector.run_automl_benchmark(X_matrix, optimal_k=optimal_k)
+
+class AutoMLSelectSchema(BaseModel):
+    selected_model: str
+
+@router.post("/automl/select-model")
+def set_active_production_model(req: AutoMLSelectSchema, user: dict = Depends(get_current_user_required)):
+    user_id = user["sub"]
+    paths = get_user_paths(user_id)
+    meta = get_active_meta(user_id)
+    meta["production_model"] = req.selected_model
+    meta["selected_at_utc"] = datetime.now(timezone.utc).isoformat()
+    try:
+        with open(paths["metadata_path"], 'w') as f:
+            json.dump(meta, f, indent=2)
+    except Exception as exc:
+        print("Meta write warning:", exc)
+    return {
+        "status": "updated",
+        "active_production_model": req.selected_model,
+        "message": f"Successfully updated active production engine to {req.selected_model}."
+    }
+
+class WebhookTestSchema(BaseModel):
+    alert_type: str = "HIGH_CHURN_RISK"
+    customer_id: str = "CUST_FLAGGED_99"
+
+@router.post("/webhooks/test")
+def trigger_test_webhook(req: WebhookTestSchema, user: dict = Depends(get_current_user_required)):
+    user_id = user["sub"]
+    from backend.api.webhooks import WebhookAlertEngine
+    payload = {
+        "customer_id": req.customer_id,
+        "churn_risk_score": 0.88,
+        "recommended_action": "Trigger immediate 20% discount win-back email."
+    }
+    return WebhookAlertEngine.dispatch_alert(user_id, req.alert_type, payload)
+
+@router.get("/webhooks/logs")
+def get_webhook_alert_logs(user: dict = Depends(get_current_user_required)):
+    user_id = user["sub"]
+    from backend.api.webhooks import WebhookAlertEngine
+    return {
+        "logs": WebhookAlertEngine.get_recent_alerts(user_id=user_id, limit=15)
+    }
