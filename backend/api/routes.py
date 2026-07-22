@@ -76,13 +76,13 @@ def register_user(req: RegisterRequestSchema):
     email_clean = req.email.strip().lower()
     name_clean = html.escape(req.name.strip())
     if not email_clean or "@" not in email_clean or len(email_clean) > 100:
-        raise HTTPException(status_code=400, detail="Please provide a valid email address.")
+        raise HTTPException(status_code=400, detail="Invalid email format. Please enter a valid email address (e.g. user@domain.com).")
     if len(req.password) < 6:
-        raise HTTPException(status_code=400, detail="Security policy: Password must be at least 6 characters long.")
+        raise HTTPException(status_code=400, detail="Password too short! Password must be at least 6 characters long.")
 
     users = load_users()
     if email_clean in users:
-        raise HTTPException(status_code=400, detail="An account with this email already exists. Please log in.")
+        raise HTTPException(status_code=409, detail="ACCOUNT_ALREADY_EXISTS: An account with this email is already registered! Switch to 'Sign In' tab to log in.")
 
     user_id = f"usr_{secrets.token_hex(6)}"
     hashed_pwd = hash_password(req.password)
@@ -114,11 +114,17 @@ def register_user(req: RegisterRequestSchema):
 @router.post("/auth/login")
 def login_user(req: LoginRequestSchema):
     email_clean = req.email.strip().lower()
-    users = load_users()
+    if not email_clean or "@" not in email_clean or len(email_clean) > 100:
+        raise HTTPException(status_code=400, detail="Invalid email format. Please enter a valid email address (e.g. user@domain.com).")
 
+    users = load_users()
     user_obj = users.get(email_clean)
-    if not user_obj or not verify_password(req.password, user_obj["password"]):
-        raise HTTPException(status_code=401, detail="Invalid email or password.")
+
+    if not user_obj:
+        raise HTTPException(status_code=404, detail="ACCOUNT_NOT_FOUND: No account exists with this email address. Click 'Create Account' tab to register!")
+
+    if not verify_password(req.password, user_obj["password"]):
+        raise HTTPException(status_code=401, detail="INCORRECT_PASSWORD: Incorrect password entered for this account. Please try again.")
 
     token = create_jwt_token(user_id=user_obj["user_id"], email=email_clean, name=user_obj["name"])
 

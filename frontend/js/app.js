@@ -1161,8 +1161,26 @@ function initAuthModule() {
 
             const data = await res.json();
             if (!res.ok) {
-                authAlert.innerText = data.detail || 'Sign in failed. Please check credentials.';
-                authAlert.style.display = 'block';
+                let errMsg = data.detail || 'Sign in failed.';
+                if (errMsg.includes('ACCOUNT_NOT_FOUND')) {
+                    authAlert.innerHTML = `
+                        <div style="display:flex; flex-direction:column; gap:8px; align-items:flex-start;">
+                            <span>⚠️ Account not found with email <strong>${email}</strong>.</span>
+                            <button type="button" id="btn-switch-to-register" style="background:linear-gradient(135deg, #10B981, #059669); color:#FFF; border:none; padding:6px 12px; border-radius:6px; font-weight:700; font-size:12px; cursor:pointer;"><i class="fa-solid fa-user-plus"></i> Create Account Now</button>
+                        </div>
+                    `;
+                    authAlert.style.display = 'block';
+                    document.getElementById('btn-switch-to-register').addEventListener('click', () => {
+                        tabRegister.click();
+                        document.getElementById('reg-email').value = email;
+                    });
+                } else if (errMsg.includes('INCORRECT_PASSWORD')) {
+                    authAlert.innerText = '❌ Incorrect password entered. Please double-check your password and try again.';
+                    authAlert.style.display = 'block';
+                } else {
+                    authAlert.innerText = `❌ ${errMsg.replace(/^[A-Z_]+:\s*/, '')}`;
+                    authAlert.style.display = 'block';
+                }
                 return;
             }
 
@@ -1170,7 +1188,7 @@ function initAuthModule() {
             hideAuthModal();
             checkUserSession();
         } catch (err) {
-            authAlert.innerText = 'Network error during sign in.';
+            authAlert.innerText = '❌ Network error during sign in.';
             authAlert.style.display = 'block';
         }
     });
@@ -1190,8 +1208,23 @@ function initAuthModule() {
 
             const data = await res.json();
             if (!res.ok) {
-                authAlert.innerText = data.detail || 'Registration failed.';
-                authAlert.style.display = 'block';
+                let errMsg = data.detail || 'Registration failed.';
+                if (errMsg.includes('ACCOUNT_ALREADY_EXISTS')) {
+                    authAlert.innerHTML = `
+                        <div style="display:flex; flex-direction:column; gap:8px; align-items:flex-start;">
+                            <span>⚠️ Account already registered with <strong>${email}</strong>.</span>
+                            <button type="button" id="btn-switch-to-login" style="background:linear-gradient(135deg, #3B82F6, #2563EB); color:#FFF; border:none; padding:6px 12px; border-radius:6px; font-weight:700; font-size:12px; cursor:pointer;"><i class="fa-solid fa-right-to-bracket"></i> Sign In to Account</button>
+                        </div>
+                    `;
+                    authAlert.style.display = 'block';
+                    document.getElementById('btn-switch-to-login').addEventListener('click', () => {
+                        tabLogin.click();
+                        document.getElementById('login-email').value = email;
+                    });
+                } else {
+                    authAlert.innerText = `❌ ${errMsg.replace(/^[A-Z_]+:\s*/, '')}`;
+                    authAlert.style.display = 'block';
+                }
                 return;
             }
 
@@ -1199,7 +1232,7 @@ function initAuthModule() {
             hideAuthModal();
             checkUserSession();
         } catch (err) {
-            authAlert.innerText = 'Network error during registration.';
+            authAlert.innerText = '❌ Network error during registration.';
             authAlert.style.display = 'block';
         }
     });
