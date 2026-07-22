@@ -366,8 +366,8 @@ def get_elbow_silhouette_data():
 
 @router.get("/analytics/cohorts")
 def get_cohort_retention_data():
-    if not os.path.exists(DATA_SEGMENTS_PATH):
-        raise HTTPException(status_code=404, detail="Dataset not found.")
+    df = get_active_df()
+    return CustomerCohortEngine.calculate_cohort_retention(df, cluster_col='KMeans_Cluster')
         
 @router.get("/visualization/pca3d")
 def get_pca3d_data():
