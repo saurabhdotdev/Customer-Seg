@@ -153,8 +153,9 @@ function initSidebarToggle() {
 /* Load Data from FastAPI Endpoints */
 async function loadDashboardData() {
     try {
+        const headers = getAuthHeaders();
         // 1. Fetch Overview KPIs
-        const overviewRes = await fetch('/api/overview');
+        const overviewRes = await fetch('/api/overview', { headers });
         if (overviewRes.ok) {
             const data = await overviewRes.json();
             rawOverviewData = data;
@@ -164,7 +165,7 @@ async function loadDashboardData() {
         }
 
         // 2. Fetch Personas & Render Charts
-        const personasRes = await fetch('/api/personas');
+        const personasRes = await fetch('/api/personas', { headers });
         if (personasRes.ok) {
             const personasData = await personasRes.json();
             renderPersonasGrid(personasData.clusters);
@@ -173,7 +174,7 @@ async function loadDashboardData() {
         }
 
         // 3. Fetch Elbow & Silhouette Grid Data
-        const elbowRes = await fetch('/api/analytics/elbow-silhouette');
+        const elbowRes = await fetch('/api/analytics/elbow-silhouette', { headers });
         if (elbowRes.ok) {
             const elbowData = await elbowRes.json();
             document.getElementById('badge-optimal-k').innerText = `Optimal K = ${elbowData.optimal_k}`;
@@ -181,14 +182,14 @@ async function loadDashboardData() {
         }
 
         // 4. Fetch PCA Scatterplot Points
-        const pcaRes = await fetch('/api/visualization/pca3d');
+        const pcaRes = await fetch('/api/visualization/pca3d', { headers });
         if (pcaRes.ok) {
             const pcaData = await pcaRes.json();
             window.dashboardCharts.renderPcaScatterChart('pcaScatterChart', pcaData.points);
         }
 
         // 5. Fetch Benchmark Table
-        const benchRes = await fetch('/api/benchmark');
+        const benchRes = await fetch('/api/benchmark', { headers });
         if (benchRes.ok) {
             const benchData = await benchRes.json();
             renderBenchmarkTable(benchData);
@@ -454,7 +455,7 @@ async function checkDatasetStatus() {
     if (!nameEl) return;
 
     try {
-        const res = await fetch('/api/data/status');
+        const res = await fetch('/api/data/status', { headers: getAuthHeaders() });
         if (!res.ok) return;
         const status = await res.json();
 
@@ -491,7 +492,7 @@ function initResetDatasetButton() {
         resetBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Resetting...`;
 
         try {
-            const res = await fetch('/api/data/reset', { method: 'POST' });
+            const res = await fetch('/api/data/reset', { method: 'POST', headers: getAuthHeaders() });
             if (res.ok) {
                 alert("Successfully reset back to the 50,000 customer demo dataset!");
                 await checkDatasetStatus();
@@ -530,6 +531,7 @@ function initUploadForm() {
         try {
             const res = await fetch('/api/data/upload', {
                 method: 'POST',
+                headers: getAuthHeaders(),
                 body: formData
             });
             if (res.ok) {
@@ -723,7 +725,7 @@ async function loadRfmData() {
     if (!container || !cohortList) return;
 
     try {
-        const res = await fetch('/api/analytics/rfm');
+        const res = await fetch('/api/analytics/rfm', { headers: getAuthHeaders() });
         if (!res.ok) return;
 
         const data = await res.json();

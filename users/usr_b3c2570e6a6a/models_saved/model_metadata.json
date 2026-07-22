@@ -1,0 +1,646 @@
+{
+  "project_positioning": "Production-style customer intelligence platform for segmentation, anomaly detection, real-time prediction, and marketing decisioning.",
+  "trained_at_utc": "2026-07-22T16:03:16.802783+00:00",
+  "data_source": "uploaded_csv:usera.csv",
+  "validation_warnings": [
+    "Auto-mapped column names: {'Recency_Days': 'Recency_Days', 'Frequency_Orders': 'Frequency_Orders', 'Monetary_Spend': 'Monetary_Spend'}",
+    "Customer_ID was missing, so stable IDs were generated.",
+    "Optional column 'Category_Diversity' was missing, populated with default '3'.",
+    "Optional column 'Engagement_Score' was missing, populated with default '50'.",
+    "Optional column 'Support_Tickets' was missing, populated with default '1'.",
+    "Optional column 'Discount_Ratio' was missing, populated with default '0.15'.",
+    "Optional column 'Return_Rate' was missing, populated with default '0.05'.",
+    "Optional column 'Preferred_Channel' was missing, populated with default 'Web'.",
+    "Optional column 'Gender' was missing, populated with default 'Unknown'.",
+    "Optional column 'Age' was missing, populated with default '35'.",
+    "Calculated 'Avg_Order_Value' from Monetary_Spend and Frequency_Orders.",
+    "Calculated 'Churn_Risk_Index' using heuristic RFM-engagement model."
+  ],
+  "total_samples": 10,
+  "optimal_k": 2,
+  "production_model": "K-Means Clustering",
+  "realtime_classifier": "RandomForestClassifier",
+  "anomaly_model": "DBSCAN (Density-Based)",
+  "classifier_metrics": {
+    "accuracy": 1.0,
+    "weighted_f1_score": 1.0,
+    "report": {
+      "0": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 2.0
+      },
+      "accuracy": 1.0,
+      "macro avg": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 2.0
+      },
+      "weighted avg": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 2.0
+      }
+    }
+  },
+  "classifier_feature_importances": [
+    {
+      "feature": "Churn_Risk_Index",
+      "importance": 0.0
+    },
+    {
+      "feature": "Avg_Order_Value",
+      "importance": 0.0
+    },
+    {
+      "feature": "Age",
+      "importance": 0.0
+    },
+    {
+      "feature": "Return_Rate",
+      "importance": 0.0
+    },
+    {
+      "feature": "Discount_Ratio",
+      "importance": 0.0
+    },
+    {
+      "feature": "Support_Tickets",
+      "importance": 0.0
+    },
+    {
+      "feature": "Engagement_Score",
+      "importance": 0.0
+    },
+    {
+      "feature": "Category_Diversity",
+      "importance": 0.0
+    },
+    {
+      "feature": "Monetary_Spend",
+      "importance": 0.0
+    },
+    {
+      "feature": "Frequency_Orders",
+      "importance": 0.0
+    },
+    {
+      "feature": "Recency_Days",
+      "importance": 0.0
+    }
+  ],
+  "model_artifacts": {
+    "preprocessing_pipeline": "C:\\Users\\saura\\OneDrive\\Desktop\\Customer-Seg\\users\\usr_b3c2570e6a6a\\models_saved\\scaler.joblib",
+    "kmeans_model": "C:\\Users\\saura\\OneDrive\\Desktop\\Customer-Seg\\users\\usr_b3c2570e6a6a\\models_saved\\kmeans_model.joblib",
+    "classifier_model": "C:\\Users\\saura\\OneDrive\\Desktop\\Customer-Seg\\users\\usr_b3c2570e6a6a\\models_saved\\classifier.joblib",
+    "pca_model": "C:\\Users\\saura\\OneDrive\\Desktop\\Customer-Seg\\users\\usr_b3c2570e6a6a\\models_saved\\pca.joblib"
+  },
+  "k_search_grid": [
+    {
+      "k": 2,
+      "inertia": 0.0,
+      "silhouette_score": 0.0,
+      "davies_bouldin": 0.0,
+      "calinski_harabasz": 0.0
+    },
+    {
+      "k": 3,
+      "inertia": 0.0,
+      "silhouette_score": 0.0,
+      "davies_bouldin": 0.0,
+      "calinski_harabasz": 0.0
+    },
+    {
+      "k": 4,
+      "inertia": 0.0,
+      "silhouette_score": 0.0,
+      "davies_bouldin": 0.0,
+      "calinski_harabasz": 0.0
+    },
+    {
+      "k": 5,
+      "inertia": 0.0,
+      "silhouette_score": 0.0,
+      "davies_bouldin": 0.0,
+      "calinski_harabasz": 0.0
+    },
+    {
+      "k": 6,
+      "inertia": 0.0,
+      "silhouette_score": 0.0,
+      "davies_bouldin": 0.0,
+      "calinski_harabasz": 0.0
+    },
+    {
+      "k": 7,
+      "inertia": 0.0,
+      "silhouette_score": 0.0,
+      "davies_bouldin": 0.0,
+      "calinski_harabasz": 0.0
+    },
+    {
+      "k": 8,
+      "inertia": 0.0,
+      "silhouette_score": 0.0,
+      "davies_bouldin": 0.0,
+      "calinski_harabasz": 0.0
+    },
+    {
+      "k": 9,
+      "inertia": 0.0,
+      "silhouette_score": 0.0,
+      "davies_bouldin": 0.0,
+      "calinski_harabasz": 0.0
+    }
+  ],
+  "dbscan_search_grid": [
+    {
+      "eps": 0.8,
+      "min_samples": 10,
+      "n_clusters": 1,
+      "n_noise": 0,
+      "noise_ratio": 0.0,
+      "silhouette_score": -1.0,
+      "davies_bouldin": 999.0,
+      "calinski_harabasz": 0.0
+    },
+    {
+      "eps": 0.8,
+      "min_samples": 15,
+      "n_clusters": 0,
+      "n_noise": 10,
+      "noise_ratio": 1.0,
+      "silhouette_score": -1.0,
+      "davies_bouldin": 999.0,
+      "calinski_harabasz": 0.0
+    },
+    {
+      "eps": 0.8,
+      "min_samples": 20,
+      "n_clusters": 0,
+      "n_noise": 10,
+      "noise_ratio": 1.0,
+      "silhouette_score": -1.0,
+      "davies_bouldin": 999.0,
+      "calinski_harabasz": 0.0
+    },
+    {
+      "eps": 0.8,
+      "min_samples": 25,
+      "n_clusters": 0,
+      "n_noise": 10,
+      "noise_ratio": 1.0,
+      "silhouette_score": -1.0,
+      "davies_bouldin": 999.0,
+      "calinski_harabasz": 0.0
+    },
+    {
+      "eps": 1.0,
+      "min_samples": 10,
+      "n_clusters": 1,
+      "n_noise": 0,
+      "noise_ratio": 0.0,
+      "silhouette_score": -1.0,
+      "davies_bouldin": 999.0,
+      "calinski_harabasz": 0.0
+    },
+    {
+      "eps": 1.0,
+      "min_samples": 15,
+      "n_clusters": 0,
+      "n_noise": 10,
+      "noise_ratio": 1.0,
+      "silhouette_score": -1.0,
+      "davies_bouldin": 999.0,
+      "calinski_harabasz": 0.0
+    },
+    {
+      "eps": 1.0,
+      "min_samples": 20,
+      "n_clusters": 0,
+      "n_noise": 10,
+      "noise_ratio": 1.0,
+      "silhouette_score": -1.0,
+      "davies_bouldin": 999.0,
+      "calinski_harabasz": 0.0
+    },
+    {
+      "eps": 1.0,
+      "min_samples": 25,
+      "n_clusters": 0,
+      "n_noise": 10,
+      "noise_ratio": 1.0,
+      "silhouette_score": -1.0,
+      "davies_bouldin": 999.0,
+      "calinski_harabasz": 0.0
+    },
+    {
+      "eps": 1.2,
+      "min_samples": 10,
+      "n_clusters": 1,
+      "n_noise": 0,
+      "noise_ratio": 0.0,
+      "silhouette_score": -1.0,
+      "davies_bouldin": 999.0,
+      "calinski_harabasz": 0.0
+    },
+    {
+      "eps": 1.2,
+      "min_samples": 15,
+      "n_clusters": 0,
+      "n_noise": 10,
+      "noise_ratio": 1.0,
+      "silhouette_score": -1.0,
+      "davies_bouldin": 999.0,
+      "calinski_harabasz": 0.0
+    },
+    {
+      "eps": 1.2,
+      "min_samples": 20,
+      "n_clusters": 0,
+      "n_noise": 10,
+      "noise_ratio": 1.0,
+      "silhouette_score": -1.0,
+      "davies_bouldin": 999.0,
+      "calinski_harabasz": 0.0
+    },
+    {
+      "eps": 1.2,
+      "min_samples": 25,
+      "n_clusters": 0,
+      "n_noise": 10,
+      "noise_ratio": 1.0,
+      "silhouette_score": -1.0,
+      "davies_bouldin": 999.0,
+      "calinski_harabasz": 0.0
+    },
+    {
+      "eps": 1.5,
+      "min_samples": 10,
+      "n_clusters": 1,
+      "n_noise": 0,
+      "noise_ratio": 0.0,
+      "silhouette_score": -1.0,
+      "davies_bouldin": 999.0,
+      "calinski_harabasz": 0.0
+    },
+    {
+      "eps": 1.5,
+      "min_samples": 15,
+      "n_clusters": 0,
+      "n_noise": 10,
+      "noise_ratio": 1.0,
+      "silhouette_score": -1.0,
+      "davies_bouldin": 999.0,
+      "calinski_harabasz": 0.0
+    },
+    {
+      "eps": 1.5,
+      "min_samples": 20,
+      "n_clusters": 0,
+      "n_noise": 10,
+      "noise_ratio": 1.0,
+      "silhouette_score": -1.0,
+      "davies_bouldin": 999.0,
+      "calinski_harabasz": 0.0
+    },
+    {
+      "eps": 1.5,
+      "min_samples": 25,
+      "n_clusters": 0,
+      "n_noise": 10,
+      "noise_ratio": 1.0,
+      "silhouette_score": -1.0,
+      "davies_bouldin": 999.0,
+      "calinski_harabasz": 0.0
+    },
+    {
+      "eps": 1.8,
+      "min_samples": 10,
+      "n_clusters": 1,
+      "n_noise": 0,
+      "noise_ratio": 0.0,
+      "silhouette_score": -1.0,
+      "davies_bouldin": 999.0,
+      "calinski_harabasz": 0.0
+    },
+    {
+      "eps": 1.8,
+      "min_samples": 15,
+      "n_clusters": 0,
+      "n_noise": 10,
+      "noise_ratio": 1.0,
+      "silhouette_score": -1.0,
+      "davies_bouldin": 999.0,
+      "calinski_harabasz": 0.0
+    },
+    {
+      "eps": 1.8,
+      "min_samples": 20,
+      "n_clusters": 0,
+      "n_noise": 10,
+      "noise_ratio": 1.0,
+      "silhouette_score": -1.0,
+      "davies_bouldin": 999.0,
+      "calinski_harabasz": 0.0
+    },
+    {
+      "eps": 1.8,
+      "min_samples": 25,
+      "n_clusters": 0,
+      "n_noise": 10,
+      "noise_ratio": 1.0,
+      "silhouette_score": -1.0,
+      "davies_bouldin": 999.0,
+      "calinski_harabasz": 0.0
+    },
+    {
+      "eps": 2.0,
+      "min_samples": 10,
+      "n_clusters": 1,
+      "n_noise": 0,
+      "noise_ratio": 0.0,
+      "silhouette_score": -1.0,
+      "davies_bouldin": 999.0,
+      "calinski_harabasz": 0.0
+    },
+    {
+      "eps": 2.0,
+      "min_samples": 15,
+      "n_clusters": 0,
+      "n_noise": 10,
+      "noise_ratio": 1.0,
+      "silhouette_score": -1.0,
+      "davies_bouldin": 999.0,
+      "calinski_harabasz": 0.0
+    },
+    {
+      "eps": 2.0,
+      "min_samples": 20,
+      "n_clusters": 0,
+      "n_noise": 10,
+      "noise_ratio": 1.0,
+      "silhouette_score": -1.0,
+      "davies_bouldin": 999.0,
+      "calinski_harabasz": 0.0
+    },
+    {
+      "eps": 2.0,
+      "min_samples": 25,
+      "n_clusters": 0,
+      "n_noise": 10,
+      "noise_ratio": 1.0,
+      "silhouette_score": -1.0,
+      "davies_bouldin": 999.0,
+      "calinski_harabasz": 0.0
+    }
+  ],
+  "kmeans_centroids": [
+    [
+      -4.440892098500626e-16,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      2.7755575615628914e-17,
+      0.0,
+      0.0,
+      1.0,
+      1.0
+    ],
+    [
+      -4.440892098500626e-16,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      2.7755575615628914e-17,
+      0.0,
+      0.0,
+      1.0,
+      1.0
+    ]
+  ],
+  "pca_metadata": {
+    "variance_explained_per_component": [
+      NaN,
+      NaN,
+      NaN
+    ],
+    "total_variance_explained": NaN
+  },
+  "benchmark_comparison": [
+    {
+      "Algorithm": "Hierarchical Agglomerative",
+      "Clusters": 2,
+      "Outliers/Noise": 0,
+      "Silhouette_Score": 0.0,
+      "Davies_Bouldin_Index": 0.0,
+      "Calinski_Harabasz_Index": 1.0
+    },
+    {
+      "Algorithm": "K-Means Clustering",
+      "Clusters": 1,
+      "Outliers/Noise": 0,
+      "Silhouette_Score": -1.0,
+      "Davies_Bouldin_Index": 999.0,
+      "Calinski_Harabasz_Index": 0.0
+    },
+    {
+      "Algorithm": "Gaussian Mixture Model (GMM)",
+      "Clusters": 1,
+      "Outliers/Noise": 0,
+      "Silhouette_Score": -1.0,
+      "Davies_Bouldin_Index": 999.0,
+      "Calinski_Harabasz_Index": 0.0
+    },
+    {
+      "Algorithm": "DBSCAN (Density-Based)",
+      "Clusters": 0,
+      "Outliers/Noise": 10,
+      "Silhouette_Score": -1.0,
+      "Davies_Bouldin_Index": 999.0,
+      "Calinski_Harabasz_Index": 0.0
+    }
+  ],
+  "persona_summary": {
+    "total_customers": 10,
+    "total_revenue": 5000.0,
+    "cluster_labels_map": {
+      "0": "Steady Loyalists"
+    },
+    "clusters": [
+      {
+        "cluster_id": 0,
+        "persona_key": "LOYALIST",
+        "persona_title": "Steady Loyalists",
+        "tagline": "Consistent Purchasers & High Lifetime Value Potential",
+        "description": "Regular customers with reliable ordering patterns and solid order value.",
+        "strategy": "Implement cross-sell and up-sell recommendations, tier-upgrade incentives, and loyalty points accelerators.",
+        "color": "#3B82F6",
+        "icon": "shield-check",
+        "metrics": {
+          "customer_count": 10,
+          "customer_percentage": 100.0,
+          "total_revenue": 5000.0,
+          "revenue_percentage": 100.0,
+          "avg_recency_days": 10.0,
+          "avg_frequency_orders": 5.0,
+          "avg_monetary_spend": 500.0,
+          "avg_order_value": 100.0,
+          "avg_engagement_score": 50.0,
+          "avg_discount_ratio": 0.15,
+          "avg_churn_risk": 0.378
+        }
+      }
+    ]
+  },
+  "segment_explanations": [
+    {
+      "cluster_id": 0,
+      "sample_size": 10,
+      "top_drivers": [
+        {
+          "feature": "Recency_Days",
+          "direction": "below average",
+          "strength": 0.0,
+          "cluster_average": 10.0,
+          "global_average": 10.0
+        },
+        {
+          "feature": "Frequency_Orders",
+          "direction": "below average",
+          "strength": 0.0,
+          "cluster_average": 5.0,
+          "global_average": 5.0
+        },
+        {
+          "feature": "Monetary_Spend",
+          "direction": "below average",
+          "strength": 0.0,
+          "cluster_average": 500.0,
+          "global_average": 500.0
+        },
+        {
+          "feature": "Avg_Order_Value",
+          "direction": "below average",
+          "strength": 0.0,
+          "cluster_average": 100.0,
+          "global_average": 100.0
+        }
+      ],
+      "plain_english": "This segment is mainly defined by Recency Days is below average, Frequency Orders is below average, Monetary Spend is below average."
+    }
+  ],
+  "campaign_recommendations": [
+    {
+      "cluster_id": 0,
+      "persona_title": "Steady Loyalists",
+      "priority_score": 78.23,
+      "expected_revenue_at_risk": 1890.0,
+      "recommended_campaign": "Cross-sell and loyalty-tier upgrade journey based on preferred category behavior.",
+      "success_metric": "Average order value lift",
+      "estimated_audience": 10
+    }
+  ],
+  "anomaly_summary": {
+    "count": 10,
+    "percentage": 100.0,
+    "interpretation": "DBSCAN is used as a risk and anomaly layer, while K-Means remains the production segmentation model.",
+    "customers": [
+      {
+        "customer_id": "UPL-10001",
+        "severity": 0.55,
+        "monetary_spend": 500.0,
+        "return_rate": 0.05,
+        "discount_ratio": 0.15,
+        "churn_risk_index": 0.378
+      },
+      {
+        "customer_id": "UPL-10002",
+        "severity": 0.55,
+        "monetary_spend": 500.0,
+        "return_rate": 0.05,
+        "discount_ratio": 0.15,
+        "churn_risk_index": 0.378
+      },
+      {
+        "customer_id": "UPL-10003",
+        "severity": 0.55,
+        "monetary_spend": 500.0,
+        "return_rate": 0.05,
+        "discount_ratio": 0.15,
+        "churn_risk_index": 0.378
+      },
+      {
+        "customer_id": "UPL-10004",
+        "severity": 0.55,
+        "monetary_spend": 500.0,
+        "return_rate": 0.05,
+        "discount_ratio": 0.15,
+        "churn_risk_index": 0.378
+      },
+      {
+        "customer_id": "UPL-10005",
+        "severity": 0.55,
+        "monetary_spend": 500.0,
+        "return_rate": 0.05,
+        "discount_ratio": 0.15,
+        "churn_risk_index": 0.378
+      },
+      {
+        "customer_id": "UPL-10006",
+        "severity": 0.55,
+        "monetary_spend": 500.0,
+        "return_rate": 0.05,
+        "discount_ratio": 0.15,
+        "churn_risk_index": 0.378
+      },
+      {
+        "customer_id": "UPL-10007",
+        "severity": 0.55,
+        "monetary_spend": 500.0,
+        "return_rate": 0.05,
+        "discount_ratio": 0.15,
+        "churn_risk_index": 0.378
+      },
+      {
+        "customer_id": "UPL-10008",
+        "severity": 0.55,
+        "monetary_spend": 500.0,
+        "return_rate": 0.05,
+        "discount_ratio": 0.15,
+        "churn_risk_index": 0.378
+      },
+      {
+        "customer_id": "UPL-10009",
+        "severity": 0.55,
+        "monetary_spend": 500.0,
+        "return_rate": 0.05,
+        "discount_ratio": 0.15,
+        "churn_risk_index": 0.378
+      },
+      {
+        "customer_id": "UPL-10010",
+        "severity": 0.55,
+        "monetary_spend": 500.0,
+        "return_rate": 0.05,
+        "discount_ratio": 0.15,
+        "churn_risk_index": 0.378
+      }
+    ]
+  },
+  "stability_report": {
+    "method": "Adjusted Rand Index across repeated train/test resamples",
+    "runs": 5,
+    "mean_adjusted_rand_index": 1.0,
+    "min_adjusted_rand_index": 1.0,
+    "max_adjusted_rand_index": 1.0,
+    "interpretation": "Scores closer to 1.0 indicate stable, reproducible customer segments."
+  }
+}

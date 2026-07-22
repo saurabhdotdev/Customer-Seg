@@ -39,3 +39,31 @@ def get_existing_path(target_path: str) -> str:
         if os.path.exists(fallback):
             return fallback
     return target_path
+
+def get_user_paths(user_id: str = None) -> dict:
+    if user_id:
+        user_dir = os.path.join(WORK_DIR, "users", user_id)
+        raw_path = os.path.join(user_dir, "data", "raw", "customer_transactions.csv")
+        processed_path = os.path.join(user_dir, "data", "processed", "customer_features.csv")
+        segments_path = os.path.join(user_dir, "data", "processed", "customer_segments.csv")
+        models_dir = os.path.join(user_dir, "models_saved")
+    else:
+        user_dir = WORK_DIR
+        raw_path = DATA_RAW_PATH
+        processed_path = DATA_PROCESSED_PATH
+        segments_path = DATA_SEGMENTS_PATH
+        models_dir = MODELS_DIR
+
+    return {
+        "user_dir": user_dir,
+        "raw_path": raw_path,
+        "processed_path": processed_path,
+        "segments_path": segments_path,
+        "models_dir": models_dir,
+        "scaler_path": os.path.join(models_dir, "scaler.joblib"),
+        "kmeans_path": os.path.join(models_dir, "kmeans_model.joblib"),
+        "classifier_path": os.path.join(models_dir, "classifier.joblib"),
+        "ltv_path": os.path.join(models_dir, "ltv_regressor.joblib"),
+        "pca_path": os.path.join(models_dir, "pca.joblib"),
+        "metadata_path": os.path.join(models_dir, "model_metadata.json"),
+    }

@@ -205,21 +205,42 @@ def validate_customer_dataframe(df: pd.DataFrame) -> tuple[pd.DataFrame, list[st
     return df_clean, warnings
 
 
-def train_customer_segmentation_pipeline(df_raw: pd.DataFrame, data_source: str = "synthetic") -> dict:
+def train_customer_segmentation_pipeline(
+    df_raw: pd.DataFrame,
+    data_source: str = "synthetic",
+    scaler_path: str = None,
+    kmeans_path: str = None,
+    classifier_path: str = None,
+    ltv_path: str = None,
+    pca_path: str = None,
+    processed_path: str = None,
+    segments_path: str = None,
+    metadata_path: str = None,
+) -> dict:
+    scaler_target = scaler_path or SCALER_PATH
+    kmeans_target = kmeans_path or KMEANS_MODEL_PATH
+    classifier_target = classifier_path or CLASSIFIER_PATH
+    ltv_target = ltv_path or LTV_REGRESSOR_PATH
+    pca_target = pca_path or PCA_PATH
+    processed_target = processed_path or DATA_PROCESSED_PATH
+    segments_target = segments_path or DATA_SEGMENTS_PATH
+    metadata_target = metadata_path or METADATA_PATH
+
     df_raw, validation_warnings = validate_customer_dataframe(df_raw)
 
-    preprocessor = CustomerDataPreprocessor(scaler_save_path=SCALER_PATH)
+    preprocessor = CustomerDataPreprocessor(scaler_save_path=scaler_target)
     X_matrix, df_processed = preprocessor.fit_transform(df_raw)
 
-    os.makedirs(os.path.dirname(DATA_PROCESSED_PATH), exist_ok=True)
-    df_processed.to_csv(DATA_PROCESSED_PATH, index=False)
+    os.makedirs(os.path.dirname(processed_target), exist_ok=True)
+    df_processed.to_csv(processed_target, index=False)
 
     kmeans = KMeansSegmentationModel()
     k_search = kmeans.find_optimal_k(X_matrix, range(2, 10))
     optimal_k = k_search["best_k"]
     kmeans.n_clusters = optimal_k
     kmeans.fit(X_matrix)
-    joblib.dump(kmeans.model, KMEANS_MODEL_PATH)
+    os.makedirs(os.path.dirname(kmeans_target), exist_ok=True)
+    joblib.dump(kmeans.model, kmeans_target)
 
     dbscan = DBSCANSegmentationModel()
     db_search = dbscan.tune_hyperparameters(X_matrix)
@@ -233,7 +254,7 @@ def train_customer_segmentation_pipeline(df_raw: pd.DataFrame, data_source: str 
     gmm = GMMSegmentationModel(n_components=optimal_k)
     gmm.fit(X_matrix)
 
-    reducer = DimensionalityReducer(n_components_pca=3, pca_save_path=PCA_PATH)
+    reducer = DimensionalityReducer(n_components_pca=3, pca_save_path=pca_target)
     X_pca, pca_meta = reducer.fit_transform_pca(X_matrix)
 
     df_processed["KMeans_Cluster"] = kmeans.labels_
@@ -243,7 +264,8 @@ def train_customer_segmentation_pipeline(df_raw: pd.DataFrame, data_source: str 
     df_processed["PCA_1"] = X_pca[:, 0]
     df_processed["PCA_2"] = X_pca[:, 1]
     df_processed["PCA_3"] = X_pca[:, 2]
-    df_processed.to_csv(DATA_SEGMENTS_PATH, index=False)
+    os.makedirs(os.path.dirname(segments_target), exist_ok=True)
+    df_processed.to_csv(segments_target, index=False)
 
     # Train Supervised Segment Classifier for Real-time Single Customer Scoring
     X_clf_train, X_clf_test, y_clf_train, y_clf_test = train_test_split(
@@ -252,13 +274,13 @@ def train_customer_segmentation_pipeline(df_raw: pd.DataFrame, data_source: str 
     classifier = SegmentClassifierModel(n_estimators=100, max_depth=12, random_state=42)
     classifier.fit(X_clf_train, y_clf_train)
     classifier_eval = classifier.evaluate(X_clf_test, y_clf_test)
-    classifier.save(CLASSIFIER_PATH)
+    classifier.save(classifier_target)
 
     # Train Supervised Customer LTV Regressor
     y_ltv = df_processed["Customer_LTV"].values if "Customer_LTV" in df_processed.columns else df_processed["Monetary_Spend"].values * 1.5
     ltv_regressor = CustomerLTVRegressor(n_estimators=100, max_depth=6, random_state=42)
     ltv_eval = ltv_regressor.fit(X_matrix, y_ltv, feature_names=preprocessor.feature_names)
-    ltv_regressor.save(LTV_REGRESSOR_PATH)
+    ltv_regressor.save(ltv_target)
 
     feature_names = [col for col in df_processed.columns if col not in [
         "Customer_ID", "KMeans_Cluster", "DBSCAN_Cluster", "HAC_Cluster", "GMM_Cluster",
@@ -288,10 +310,10 @@ def train_customer_segmentation_pipeline(df_raw: pd.DataFrame, data_source: str 
         "classifier_metrics": classifier_eval,
         "classifier_feature_importances": feature_importances,
         "model_artifacts": {
-            "preprocessing_pipeline": SCALER_PATH,
-            "kmeans_model": KMEANS_MODEL_PATH,
-            "classifier_model": CLASSIFIER_PATH,
-            "pca_model": PCA_PATH,
+            "preprocessing_pipeline": scaler_target,
+            "kmeans_model": kmeans_target,
+            "classifier_model": classifier_target,
+            "pca_model": pca_target,
         },
         "k_search_grid": k_search["grid_search"],
         "dbscan_search_grid": db_search["grid_search"],
@@ -307,8 +329,8 @@ def train_customer_segmentation_pipeline(df_raw: pd.DataFrame, data_source: str 
         ),
     }
 
-    os.makedirs(os.path.dirname(METADATA_PATH), exist_ok=True)
-    with open(METADATA_PATH, "w") as f:
+    os.makedirs(os.path.dirname(metadata_target), exist_ok=True)
+    with open(metadata_target, "w") as f:
         json.dump(metadata, f, indent=2)
 
     return metadata

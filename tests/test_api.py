@@ -116,3 +116,32 @@ def test_api_auth_register_login_me():
     me = client.get("/api/auth/me", headers={"Authorization": f"Bearer {token}"})
     assert me.status_code == 200
     assert me.json()["email"] == email
+
+def test_api_multi_tenant_user_isolation():
+    import io
+    import pandas as pd
+    reg_a = client.post("/api/auth/register", json={
+        "name": "User A",
+        "email": f"usera_{secrets.token_hex(3)}@example.com",
+        "password": "password123"
+    })
+    token_a = reg_a.json()["access_token"]
+    csv_a = pd.DataFrame({"Recency_Days": [10]*10, "Frequency_Orders": [5]*10, "Monetary_Spend": [500.0]*10}).to_csv(index=False)
+    client.post("/api/data/upload", headers={"Authorization": f"Bearer {token_a}"}, files={"file": ("usera.csv", io.BytesIO(csv_a.encode()), "text/csv")})
+    
+    user_a_overview = client.get("/api/overview", headers={"Authorization": f"Bearer {token_a}"})
+    assert user_a_overview.status_code == 200
+    assert user_a_overview.json()["total_customers"] == 10
+
+    reg_b = client.post("/api/auth/register", json={
+        "name": "User B",
+        "email": f"userb_{secrets.token_hex(3)}@example.com",
+        "password": "password123"
+    })
+    token_b = reg_b.json()["access_token"]
+    csv_b = pd.DataFrame({"Recency_Days": [15]*15, "Frequency_Orders": [8]*15, "Monetary_Spend": [1200.0]*15}).to_csv(index=False)
+    client.post("/api/data/upload", headers={"Authorization": f"Bearer {token_b}"}, files={"file": ("userb.csv", io.BytesIO(csv_b.encode()), "text/csv")})
+    
+    user_b_overview = client.get("/api/overview", headers={"Authorization": f"Bearer {token_b}"})
+    assert user_b_overview.status_code == 200
+    assert user_b_overview.json()["total_customers"] == 15

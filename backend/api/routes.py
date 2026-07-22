@@ -6,17 +6,27 @@ import pandas as pd
 from fastapi import APIRouter, File, HTTPException, UploadFile, Depends
 from fastapi.responses import PlainTextResponse, FileResponse
 from pydantic import BaseModel
-from backend.config import DATA_RAW_PATH, DATA_SEGMENTS_PATH, METADATA_PATH, SCALER_PATH, KMEANS_MODEL_PATH, CLASSIFIER_PATH, LTV_REGRESSOR_PATH, PCA_PATH, BASE_DATA_SEGMENTS, BASE_METADATA_PATH, get_existing_path
+from backend.config import DATA_RAW_PATH, DATA_SEGMENTS_PATH, METADATA_PATH, SCALER_PATH, KMEANS_MODEL_PATH, CLASSIFIER_PATH, LTV_REGRESSOR_PATH, PCA_PATH, BASE_DATA_SEGMENTS, BASE_METADATA_PATH, get_existing_path, get_user_paths
 
-def get_active_df() -> pd.DataFrame:
-    if os.path.exists(DATA_SEGMENTS_PATH):
+def get_active_df(user_id: str = None) -> pd.DataFrame:
+    paths = get_user_paths(user_id)
+    if os.path.exists(paths["segments_path"]):
+        return pd.read_csv(paths["segments_path"])
+    elif os.path.exists(DATA_SEGMENTS_PATH):
         return pd.read_csv(DATA_SEGMENTS_PATH)
     elif os.path.exists(BASE_DATA_SEGMENTS):
         return pd.read_csv(BASE_DATA_SEGMENTS)
     else:
         raise HTTPException(status_code=404, detail="Dataset not found. Please upload a dataset or run training.")
 
-def get_active_meta() -> dict:
+def get_active_meta(user_id: str = None) -> dict:
+    paths = get_user_paths(user_id)
+    if os.path.exists(paths["metadata_path"]):
+        try:
+            with open(paths["metadata_path"], 'r') as f:
+                return json.load(f)
+        except Exception:
+            pass
     if os.path.exists(METADATA_PATH):
         try:
             with open(METADATA_PATH, 'r') as f:
@@ -139,8 +149,12 @@ class SimulationRequestSchema(BaseModel):
     target_cohort: str = "all"
 
 @router.post("/simulator/simulate")
-def run_retention_simulation(req: SimulationRequestSchema):
-    df = get_active_df()
+def run_retention_simulation(
+    req: SimulationRequestSchema,
+    user: dict = Depends(get_current_user_optional)
+):
+    user_id = user["sub"] if user else None
+    df = get_active_df(user_id)
     return RetentionSimulatorEngine.run_simulation(
         df=df,
         engagement_boost_pct=req.engagement_boost_pct,
@@ -171,12 +185,17 @@ def get_upload_schema():
     }
 
 @router.post("/data/upload")
-async def upload_customer_csv(file: UploadFile = File(...)):
+async def upload_customer_csv(
+    file: UploadFile = File(...),
+    user: dict = Depends(get_current_user_optional)
+):
+    user_id = user["sub"] if user else None
+    paths = get_user_paths(user_id)
+
     filename_clean = os.path.basename(file.filename)
     if not (filename_clean.lower().endswith(".csv") or filename_clean.lower().endswith(".txt")):
         raise HTTPException(status_code=400, detail="Security policy: Only .csv files are permitted.")
 
-    # Read bytes with 25MB limit check (DoS Prevention)
     contents = await file.read(25 * 1024 * 1024 + 1)
     if len(contents) > 25 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="Security policy: File size exceeds 25 MB limit.")
@@ -191,9 +210,21 @@ async def upload_customer_csv(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Upload at least 5 customer rows for meaningful segmentation.")
 
     try:
-        os.makedirs(os.path.dirname(DATA_RAW_PATH), exist_ok=True)
-        df.to_csv(DATA_RAW_PATH, index=False)
-        metadata = train_customer_segmentation_pipeline(df, data_source=f"uploaded_csv:{filename_clean}")
+        os.makedirs(os.path.dirname(paths["raw_path"]), exist_ok=True)
+        os.makedirs(paths["models_dir"], exist_ok=True)
+        df.to_csv(paths["raw_path"], index=False)
+        metadata = train_customer_segmentation_pipeline(
+            df,
+            data_source=f"uploaded_csv:{filename_clean}",
+            scaler_path=paths["scaler_path"],
+            kmeans_path=paths["kmeans_path"],
+            classifier_path=paths["classifier_path"],
+            ltv_path=paths["ltv_path"],
+            pca_path=paths["pca_path"],
+            processed_path=paths["processed_path"],
+            segments_path=paths["segments_path"],
+            metadata_path=paths["metadata_path"]
+        )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
@@ -211,11 +242,11 @@ async def upload_customer_csv(file: UploadFile = File(...)):
     }
 
 @router.get("/data/status")
-def get_dataset_status():
-    if not os.path.exists(METADATA_PATH):
+def get_dataset_status(user: dict = Depends(get_current_user_optional)):
+    user_id = user["sub"] if user else None
+    meta = get_active_meta(user_id)
+    if not meta:
         return {"data_source": "synthetic", "display_name": "Demo Dataset (50,000 Customers)", "is_custom": False, "total_samples": 0}
-    with open(METADATA_PATH, 'r') as f:
-        meta = json.load(f)
     data_source = meta.get("data_source", "synthetic")
     is_custom = "uploaded_csv" in data_source
     display_name = data_source.replace("uploaded_csv:", "User File: ") if is_custom else "Demo Synthetic Dataset (50,000 Customers)"
@@ -228,17 +259,22 @@ def get_dataset_status():
     }
 
 @router.post("/data/reset")
-def reset_to_demo_dataset():
-    from run_demo import run_pipeline
+def reset_to_demo_dataset(user: dict = Depends(get_current_user_optional)):
+    user_id = user["sub"] if user else None
+    paths = get_user_paths(user_id)
     try:
+        if user_id and os.path.exists(paths["user_dir"]):
+            shutil.rmtree(paths["user_dir"], ignore_errors=True)
+        from run_demo import run_pipeline
         run_pipeline(n_samples=50000)
         return {"status": "reset", "message": "Successfully reset back to 50,000 demo dataset."}
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Reset failed: {exc}") from exc
 
 @router.get("/overview")
-def get_overview():
-    df = get_active_df()
+def get_overview(user: dict = Depends(get_current_user_optional)):
+    user_id = user["sub"] if user else None
+    df = get_active_df(user_id)
     
     total_customers = len(df)
     total_revenue = float(df['Monetary_Spend'].sum())
@@ -260,14 +296,16 @@ def get_overview():
     }
 
 @router.get("/benchmark")
-def get_benchmark():
-    meta = get_active_meta()
+def get_benchmark(user: dict = Depends(get_current_user_optional)):
+    user_id = user["sub"] if user else None
+    meta = get_active_meta(user_id)
     return meta.get("benchmark_comparison", [])
 
 @router.get("/analytics/rfm")
-def get_rfm_analytics():
-    df = get_active_df()
-    return RFMAnalyticsEngine.generate_rfm_analysis(df)
+def get_rfm_analytics(user: dict = Depends(get_current_user_optional)):
+    user_id = user["sub"] if user else None
+    df = get_active_df(user_id)
+    return RFMAnalyticsEngine.compute_rfm_scores(df)
 
 @router.get("/model/info")
 def get_model_info():
