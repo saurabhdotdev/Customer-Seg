@@ -51,3 +51,19 @@ class CampaignCopyResponseSchema(BaseModel):
     ad_description: str
     call_to_action: str
     discount_offer: str
+
+
+class NextBestActionRequestSchema(BaseModel):
+    customer: CustomerInputSchema
+    churn_risk_score: Optional[float] = Field(default=0.3, ge=0.0, le=1.0)
+    predicted_ltv_12m: Optional[float] = Field(default=1200.0, ge=0.0)
+    is_anomaly: Optional[bool] = False
+    persona_key: Optional[str] = "CHAMPION"
+
+
+class NextBestActionResponseSchema(BaseModel):
+    total_actions_evaluated: int
+    top_action: Optional[Dict[str, Any]]
+    recommendations: List[Dict[str, Any]]
+    evaluated_metrics: Dict[str, Any]
+

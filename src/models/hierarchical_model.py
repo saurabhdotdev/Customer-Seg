@@ -32,14 +32,15 @@ class HierarchicalSegmentationModel:
     def predict_nearest_cluster(self, X_sample: np.ndarray, X_train: np.ndarray, train_labels: np.ndarray = None) -> np.ndarray:
         """
         Assigns new points to the nearest cluster centroid of fitted train matrix.
+        Optimized with vectorized distance computation.
         """
         labels = self.labels_ if train_labels is None else train_labels
-        unique_labels = set(labels)
-        centroids = {l: X_train[labels == l].mean(axis=0) for l in unique_labels}
-        
-        predictions = []
-        for x in X_sample:
-            dists = {l: np.linalg.norm(x - centroids[l]) for l in centroids}
-            predictions.append(min(dists, key=dists.get))
+        unique_labels = sorted(list(set(labels)))
+        if not unique_labels:
+            return np.zeros(len(X_sample), dtype=int)
             
-        return np.array(predictions)
+        centroids = np.array([X_train[labels == l].mean(axis=0) for l in unique_labels])
+        dists = np.linalg.norm(X_sample[:, np.newaxis, :] - centroids[np.newaxis, :, :], axis=2)
+        nearest_indices = np.argmin(dists, axis=1)
+        return np.array([unique_labels[idx] for idx in nearest_indices])
+

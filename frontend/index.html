@@ -49,6 +49,9 @@
                 <a href="#actions" class="nav-item" data-tab="tab-actions">
                     <i class="fa-solid fa-bullhorn"></i> <span>Campaign Actions</span>
                 </a>
+                <a href="#nba" class="nav-item" data-tab="tab-nba">
+                    <i class="fa-solid fa-crosshairs"></i> <span>Next-Best-Action Engine</span>
+                </a>
                 <a href="#testing" class="nav-item" data-tab="tab-testing">
                     <i class="fa-solid fa-vial-circle-check"></i> <span>How It Works & Sandbox</span>
                 </a>
@@ -346,6 +349,85 @@
                         </div>
                     </form>
                     <div id="copy-result-container"></div>
+                </div>
+            </section>
+
+            <!-- TAB: NEXT-BEST-ACTION (NBA) ENGINE -->
+            <section id="tab-nba" class="tab-content">
+                <div class="glass-card" style="margin-bottom:24px;">
+                    <div class="card-header flex-between">
+                        <div>
+                            <h2><i class="fa-solid fa-crosshairs" style="color:#06B6D4;"></i> Next-Best-Action & Personalization Engine</h2>
+                            <p class="card-sub">Multi-factor algorithmic scoring calculating exact retention/upsell actions, expected ROI lift, and offer costs.</p>
+                        </div>
+                        <span class="pill-badge active" style="background:rgba(6,182,212,0.15); color:#06B6D4; border:1px solid rgba(6,182,212,0.3);">
+                            <i class="fa-solid fa-bolt"></i> ML Scoring Engine Active
+                        </span>
+                    </div>
+
+                    <!-- Preset Buttons -->
+                    <div style="margin-bottom:20px;">
+                        <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:8px;">Load Preset Customer Archetype:</label>
+                        <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                            <button type="button" class="btn btn-secondary btn-nba-preset" data-preset="vip"><i class="fa-solid fa-gem" style="color:#10B981;"></i> VIP Whale ($3.5k Spend)</button>
+                            <button type="button" class="btn btn-secondary btn-nba-preset" data-preset="at_risk"><i class="fa-solid fa-triangle-exclamation" style="color:#F43F5E;"></i> High Churn Risk (85%)</button>
+                            <button type="button" class="btn btn-secondary btn-nba-preset" data-preset="bargain"><i class="fa-solid fa-basket-shopping" style="color:#F59E0B;"></i> Bargain Hunter (High Discount)</button>
+                            <button type="button" class="btn btn-secondary btn-nba-preset" data-preset="new_buyer"><i class="fa-solid fa-seedling" style="color:#14B8A6;"></i> New Buyer (First Order)</button>
+                        </div>
+                    </div>
+
+                    <!-- NBA Inputs Form -->
+                    <form id="nba-eval-form" style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:20px;">
+                        <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                            <div class="form-group">
+                                <label>Recency (Days Lapsed)</label>
+                                <input type="number" id="nba-recency" value="15" min="0" required style="padding:10px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:#FFF; width:100%;">
+                            </div>
+                            <div class="form-group">
+                                <label>Frequency (Orders)</label>
+                                <input type="number" id="nba-frequency" value="12" min="1" required style="padding:10px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:#FFF; width:100%;">
+                            </div>
+                            <div class="form-group">
+                                <label>Monetary Spend ($)</label>
+                                <input type="number" id="nba-spend" value="2800" min="0" step="any" required style="padding:10px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:#FFF; width:100%;">
+                            </div>
+                            <div class="form-group">
+                                <label>Churn Risk Index (0.0 to 1.0)</label>
+                                <input type="number" id="nba-churn" value="0.15" min="0" max="1" step="0.01" required style="padding:10px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:#FFF; width:100%;">
+                            </div>
+                            <div class="form-group">
+                                <label>12M LTV Forecast ($)</label>
+                                <input type="number" id="nba-ltv" value="4200" min="0" step="any" required style="padding:10px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:#FFF; width:100%;">
+                            </div>
+                            <div class="form-group">
+                                <label>Customer Persona</label>
+                                <select id="nba-persona" style="padding:10px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:#FFF; width:100%;">
+                                    <option value="CHAMPION">CHAMPION (VIP Spender)</option>
+                                    <option value="LOYALIST">LOYALIST (Steady Buyer)</option>
+                                    <option value="AT_RISK">AT_RISK (High Churn)</option>
+                                    <option value="BARGAIN">BARGAIN (Price Sensitive)</option>
+                                    <option value="NEW_BUYER">NEW_BUYER (First Timer)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="margin-top:16px;">
+                            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-calculator"></i> Calculate Next-Best-Action & ROI</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- NBA Output Cards Container -->
+                <div id="nba-results-container" style="display:none; margin-bottom:24px;"></div>
+
+                <!-- Segment Matrix Table Card -->
+                <div class="glass-card">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-sitemap" style="color:#8B5CF6;"></i> Organization-Wide Next-Best-Action Matrix</h2>
+                        <p class="card-sub">Top automated action strategy mapped across each core customer persona cluster.</p>
+                    </div>
+                    <div id="nba-matrix-container" style="overflow-x:auto;">
+                        <p style="font-size:13px; color:var(--text-muted);">Loading segment matrix...</p>
+                    </div>
                 </div>
             </section>
 

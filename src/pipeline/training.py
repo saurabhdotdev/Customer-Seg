@@ -341,8 +341,21 @@ def train_customer_segmentation_pipeline(
         ),
     }
 
+    class NumpyEncoder(json.JSONEncoder):
+        def default(self, obj):
+            if isinstance(obj, (np.int64, np.int32, np.int16, np.int8)):
+                return int(obj)
+            elif isinstance(obj, (np.float64, np.float32, np.float16)):
+                return float(obj)
+            elif isinstance(obj, np.ndarray):
+                return obj.tolist()
+            elif isinstance(obj, np.bool_):
+                return bool(obj)
+            return super(NumpyEncoder, self).default(obj)
+
     os.makedirs(os.path.dirname(metadata_target), exist_ok=True)
     with open(metadata_target, "w") as f:
-        json.dump(metadata, f, indent=2)
+        json.dump(metadata, f, indent=2, cls=NumpyEncoder)
 
     return metadata
+

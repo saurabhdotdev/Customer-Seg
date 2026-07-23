@@ -40,7 +40,10 @@ def get_active_meta(user_id: str = None) -> dict:
         except Exception:
             pass
     return {}
-from backend.api.schemas import CustomerInputSchema, PredictionResponseSchema, CampaignCopyRequestSchema, CampaignCopyResponseSchema
+from backend.api.schemas import (
+    CustomerInputSchema, PredictionResponseSchema, CampaignCopyRequestSchema,
+    CampaignCopyResponseSchema, NextBestActionRequestSchema, NextBestActionResponseSchema
+)
 from src.data.preprocessor import CustomerDataPreprocessor
 from src.visualization.dimensionality import DimensionalityReducer
 from src.insights.persona_generator import CustomerPersonaGenerator
@@ -56,6 +59,7 @@ from src.insights.cohort_engine import CustomerCohortEngine
 from src.insights.rfm_engine import RFMAnalyticsEngine
 from src.models.classifier import SegmentClassifierModel
 from src.models.ltv_regressor import CustomerLTVRegressor
+from src.models.next_best_action import NextBestActionEngine
 from src.pipeline.training import REQUIRED_COLUMNS, train_customer_segmentation_pipeline
 
 router = APIRouter()
@@ -880,3 +884,301 @@ def get_ltv_model_benchmark(user: dict = Depends(get_current_user_optional)):
         "gradient_boosting_regressor": gb_metrics,
         "winner": "Gradient Boosting Regressor" if gb_metrics.get("r2_score", 0) >= linear_metrics.get("r2_score", 0) else "Linear/Ridge Baseline"
     }
+
+# ==========================================
+# CUSTOM CSV UPLOAD & RETRAINING API
+# ==========================================
+
+@router.post("/dataset/upload")
+async def upload_custom_dataset(
+    file: UploadFile = File(...),
+    user: dict = Depends(get_current_user_optional)
+):
+    """
+    Accepts a user-uploaded CSV file, validates required RFM & behavioral columns,
+    saves dataset to user tenant storage, and dynamically retrains all ML models.
+    """
+    if not file.filename.lower().endswith(".csv"):
+        raise HTTPException(status_code=400, detail="Invalid file type! Please upload a valid CSV (.csv) dataset file.")
+
+    user_id = user["sub"] if user else None
+    paths = get_user_paths(user_id)
+    os.makedirs(os.path.dirname(paths["raw_path"]), exist_ok=True)
+    os.makedirs(paths["models_dir"], exist_ok=True)
+
+    try:
+        df_uploaded = pd.read_csv(file.file)
+    except Exception as err:
+        raise HTTPException(status_code=400, detail=f"Failed to parse CSV file: {str(err)}")
+
+    if len(df_uploaded) < 5:
+        raise HTTPException(status_code=400, detail="Uploaded dataset contains fewer than 5 rows. Please provide at least 5 customer records.")
+
+    # Column Mapping Standardizer
+    col_mapping = {}
+    for col in df_uploaded.columns:
+        c_lower = col.strip().lower().replace(" ", "_")
+        if c_lower in ["customer_id", "customerid", "id", "user_id"]:
+            col_mapping[col] = "CustomerID"
+        elif c_lower in ["recency_days", "recency", "last_order_days", "days_since_last_order"]:
+            col_mapping[col] = "Recency_Days"
+        elif c_lower in ["frequency_orders", "frequency", "orders", "total_orders"]:
+            col_mapping[col] = "Frequency_Orders"
+        elif c_lower in ["monetary_spend", "monetary", "spend", "total_spend", "revenue"]:
+            col_mapping[col] = "Monetary_Spend"
+        elif c_lower in ["category_diversity", "diversity", "categories"]:
+            col_mapping[col] = "Category_Diversity"
+        elif c_lower in ["engagement_score", "engagement", "activity_score"]:
+            col_mapping[col] = "Engagement_Score"
+        elif c_lower in ["support_tickets", "tickets", "complaints"]:
+            col_mapping[col] = "Support_Tickets"
+        elif c_lower in ["discount_ratio", "discount", "discounts"]:
+            col_mapping[col] = "Discount_Ratio"
+        elif c_lower in ["return_rate", "returns", "refund_rate"]:
+            col_mapping[col] = "Return_Rate"
+
+    df_uploaded = df_uploaded.rename(columns=col_mapping)
+
+    # Verify essential columns
+    required_essential = ["Recency_Days", "Frequency_Orders", "Monetary_Spend"]
+    missing_essential = [c for c in required_essential if c not in df_uploaded.columns]
+    if missing_essential:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Missing essential dataset columns: {', '.join(missing_essential)}. CSV must contain Recency, Frequency, and Monetary Spend values."
+        )
+
+    # Assign CustomerID if missing
+    if "CustomerID" not in df_uploaded.columns:
+        df_uploaded["CustomerID"] = [f"CUST_{i+1001}" for i in range(len(df_uploaded))]
+
+    # Impute optional features with sensible defaults if missing
+    defaults = {
+        "Category_Diversity": 3,
+        "Engagement_Score": 65.0,
+        "Support_Tickets": 0,
+        "Discount_Ratio": 0.10,
+        "Return_Rate": 0.03
+    }
+    for feat, default_val in defaults.items():
+        if feat not in df_uploaded.columns:
+            df_uploaded[feat] = default_val
+
+    # Clean numeric columns
+    for col in ["Recency_Days", "Frequency_Orders", "Monetary_Spend", "Category_Diversity", "Engagement_Score", "Support_Tickets", "Discount_Ratio", "Return_Rate"]:
+        df_uploaded[col] = pd.to_numeric(df_uploaded[col], errors='coerce').fillna(defaults.get(col, 1))
+
+    # Save to user raw dataset path
+    df_uploaded.to_csv(paths["raw_path"], index=False)
+
+    # Dynamically retrain ML models & pipeline
+    try:
+        meta = train_customer_segmentation_pipeline(df_uploaded, data_source=f"user_upload_{file.filename}")
+        
+        # Save user specific metadata and segments
+        df_segmented = pd.read_csv(DATA_SEGMENTS_PATH) if os.path.exists(DATA_SEGMENTS_PATH) else df_uploaded
+        df_segmented.to_csv(paths["segments_path"], index=False)
+        
+        with open(paths["metadata_path"], 'w') as f:
+            json.dump(meta, f, indent=2)
+
+    except Exception as train_err:
+        raise HTTPException(status_code=500, detail=f"ML Pipeline retraining failed on uploaded data: {str(train_err)}")
+
+    return {
+        "status": "success",
+        "filename": file.filename,
+        "total_records": len(df_uploaded),
+        "optimal_k": meta.get("optimal_k", 4),
+        "production_model": meta.get("production_model", "K-Means Clustering"),
+        "message": f"Dataset '{file.filename}' uploaded successfully! All {len(df_uploaded)} records processed and models dynamically retrained."
+    }
+
+@router.get("/dataset/template")
+def download_csv_template():
+    """Generates a downloadable sample CSV template for user uploads."""
+    template_csv = (
+        "CustomerID,Recency_Days,Frequency_Orders,Monetary_Spend,Category_Diversity,Engagement_Score,Support_Tickets,Discount_Ratio,Return_Rate\n"
+        "CUST_1001,12,24,3500.50,5,88.5,0,0.10,0.02\n"
+        "CUST_1002,145,2,180.00,1,22.0,3,0.35,0.15\n"
+        "CUST_1003,5,42,8900.00,8,95.0,0,0.05,0.01\n"
+        "CUST_1004,65,6,620.25,2,45.0,1,0.20,0.05\n"
+        "CUST_1005,2,18,2100.00,4,78.0,0,0.12,0.03\n"
+    )
+    return PlainTextResponse(
+        content=template_csv,
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=customer_segmentation_template.csv"}
+    )
+
+# ==========================================
+# REAL-TIME LIVE TRANSACTION STREAMING API
+# ==========================================
+
+@router.post("/simulator/stream-tick")
+def stream_transaction_tick(user: dict = Depends(get_current_user_optional)):
+    """
+    Simulates a real-time incoming transaction event stream tick.
+    Classifies customer persona, checks IsolationForest anomaly detector,
+    evaluates churn explainability, and triggers webhooks if high risk detected.
+    """
+    user_id = user["sub"] if user else None
+    
+    # Generate randomized incoming transaction profile
+    cust_num = np.random.randint(1000, 9999)
+    cid = f"CUST_STREAM_{cust_num}"
+    
+    # Generate realistic distribution profile
+    event_type_roll = np.random.rand()
+    if event_type_roll < 0.15: # VIP Whale
+        recency = np.random.randint(1, 10)
+        freq = np.random.randint(25, 60)
+        spend = float(round(np.random.uniform(4000.0, 12000.0), 2))
+        diversity = np.random.randint(5, 10)
+        engagement = float(round(np.random.uniform(85.0, 99.0), 1))
+        tickets = 0
+        discount = float(round(np.random.uniform(0.02, 0.10), 2))
+        returns = float(round(np.random.uniform(0.0, 0.03), 2))
+    elif event_type_roll < 0.35: # At Risk / Churning
+        recency = np.random.randint(70, 180)
+        freq = np.random.randint(1, 4)
+        spend = float(round(np.random.uniform(100.0, 500.0), 2))
+        diversity = np.random.randint(1, 3)
+        engagement = float(round(np.random.uniform(10.0, 40.0), 1))
+        tickets = np.random.randint(2, 5)
+        discount = float(round(np.random.uniform(0.30, 0.60), 2))
+        returns = float(round(np.random.uniform(0.10, 0.30), 2))
+    else: # Typical Buyer
+        recency = np.random.randint(5, 45)
+        freq = np.random.randint(5, 18)
+        spend = float(round(np.random.uniform(400.0, 1800.0), 2))
+        diversity = np.random.randint(2, 6)
+        engagement = float(round(np.random.uniform(50.0, 80.0), 1))
+        tickets = np.random.randint(0, 2)
+        discount = float(round(np.random.uniform(0.05, 0.20), 2))
+        returns = float(round(np.random.uniform(0.01, 0.08), 2))
+
+    single_input = CustomerInputSchema(
+        Recency_Days=recency,
+        Frequency_Orders=freq,
+        Monetary_Spend=spend,
+        Category_Diversity=diversity,
+        Engagement_Score=engagement,
+        Support_Tickets=tickets,
+        Discount_Ratio=discount,
+        Return_Rate=returns
+    )
+
+    prediction = predict_customer_segment(single_input)
+    
+    # Calculate churn risk & anomaly
+    from src.models.linear_models import LogisticChurnClassifier
+    classifier = LogisticChurnClassifier()
+    churn_info = classifier.predict_churn_probability(single_input.model_dump())
+
+    webhook_fired = False
+    if churn_info["churn_probability"] >= 70.0 or prediction["anomaly_audit"]["is_anomaly"]:
+        try:
+            from backend.api.webhooks import trigger_webhook_alert
+            trigger_webhook_alert(
+                event_type="high_churn_risk" if churn_info["churn_probability"] >= 70.0 else "anomaly_detected",
+                payload={
+                    "customer_id": cid,
+                    "monetary_spend": spend,
+                    "churn_probability": churn_info["churn_probability"],
+                    "is_anomaly": prediction["anomaly_audit"]["is_anomaly"],
+                    "persona": prediction["persona_title"]
+                },
+                user_id=user_id
+            )
+            webhook_fired = True
+        except Exception:
+            pass
+
+    return {
+        "timestamp": datetime.now(timezone.utc).strftime("%H:%M:%S"),
+        "customer_id": cid,
+        "recency_days": recency,
+        "frequency_orders": freq,
+        "monetary_spend": spend,
+        "predicted_cluster": prediction["predicted_cluster"],
+        "persona_title": prediction["persona_title"],
+        "churn_risk_pct": churn_info["churn_probability"],
+        "risk_category": churn_info["risk_category"],
+        "badge_color": churn_info["badge_color"],
+        "is_anomaly": prediction["anomaly_audit"]["is_anomaly"],
+        "anomaly_score": prediction["anomaly_audit"]["score"],
+        "webhook_fired": webhook_fired
+    }
+
+
+@router.post("/recommendations/next-best-action", response_model=NextBestActionResponseSchema)
+def recommend_next_best_action(
+    payload: NextBestActionRequestSchema,
+    current_user: dict = Depends(get_current_user_optional)
+):
+    """
+    Evaluates customer profile metrics and calculates prioritized Next-Best-Actions,
+    expected conversion, offer cost, LTV lift, and Net ROI score.
+    """
+    try:
+        nba_engine = NextBestActionEngine()
+        customer_dict = payload.customer.model_dump()
+        result = nba_engine.evaluate_customer(
+            customer_data=customer_dict,
+            churn_risk_score=payload.churn_risk_score,
+            predicted_ltv_12m=payload.predicted_ltv_12m,
+            is_anomaly=payload.is_anomaly,
+            persona_key=payload.persona_key
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate Next-Best-Action recommendations: {str(e)}")
+
+
+@router.get("/recommendations/segment-matrix")
+def get_segment_recommendations_matrix(
+    current_user: dict = Depends(get_current_user_optional)
+):
+    """
+    Returns segment-level Next-Best-Action recommendation summaries for all core persona profiles.
+    """
+    nba_engine = NextBestActionEngine()
+    personas_archetypes = [
+        {"key": "CHAMPION", "recency": 10, "freq": 18, "spend": 3200.0, "churn": 0.10, "ltv": 4500.0},
+        {"key": "LOYALIST", "recency": 25, "freq": 8, "spend": 1200.0, "churn": 0.25, "ltv": 2100.0},
+        {"key": "AT_RISK", "recency": 115, "freq": 4, "spend": 850.0, "churn": 0.78, "ltv": 1100.0},
+        {"key": "BARGAIN", "recency": 50, "freq": 3, "spend": 280.0, "churn": 0.45, "ltv": 520.0},
+        {"key": "NEW_BUYER", "recency": 5, "freq": 1, "spend": 95.0, "churn": 0.35, "ltv": 680.0},
+    ]
+
+    matrix = []
+    for arch in personas_archetypes:
+        eval_res = nba_engine.evaluate_customer(
+            customer_data={
+                "Recency_Days": arch["recency"],
+                "Frequency_Orders": arch["freq"],
+                "Monetary_Spend": arch["spend"],
+                "Category_Diversity": 2,
+                "Engagement_Score": 65.0,
+                "Discount_Ratio": 0.25 if arch["key"] == "BARGAIN" else 0.15
+            },
+            churn_risk_score=arch["churn"],
+            predicted_ltv_12m=arch["ltv"],
+            persona_key=arch["key"]
+        )
+        top = eval_res["top_action"]
+        matrix.append({
+            "persona_key": arch["key"],
+            "top_action_title": top["title"] if top else "N/A",
+            "category": top["category"] if top else "N/A",
+            "priority_score": top["priority_score"] if top else 0,
+            "net_roi_percent": top["net_roi_percent"] if top else 0,
+            "offer_cost": top["offer_cost"] if top else 0,
+            "expected_ltv_gain": top["expected_ltv_gain"] if top else 0,
+            "badge_color": top["badge_color"] if top else "indigo",
+            "icon": top["icon"] if top else "💡"
+        })
+
+    return {"matrix": matrix}
+

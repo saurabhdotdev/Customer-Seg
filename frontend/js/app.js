@@ -62,7 +62,9 @@ function initNavigation() {
         'tab-testing': 'How It Works & Interactive Sandbox',
         'tab-clusters': 'PCA 3D Cluster Visualizer',
         'tab-benchmark': 'Clustering Algorithm Benchmarks',
-        'tab-predictor': 'Real-Time Customer Predictor'
+        'tab-simulator': 'Revenue & Churn Simulator',
+        'tab-predictor': 'Real-Time Customer Predictor',
+        'tab-nba': 'Next-Best-Action Engine'
     };
 
     const pathToTabMap = {
@@ -74,7 +76,9 @@ function initNavigation() {
         '/testing': 'tab-testing',
         '/clusters': 'tab-clusters',
         '/benchmark': 'tab-benchmark',
+        '/simulator': 'tab-simulator',
         '/predictor': 'tab-predictor',
+        '/nba': 'tab-nba',
         '#overview': 'tab-overview',
         '#data': 'tab-data',
         '#personas': 'tab-personas',
@@ -83,7 +87,9 @@ function initNavigation() {
         '#testing': 'tab-testing',
         '#clusters': 'tab-clusters',
         '#benchmark': 'tab-benchmark',
-        '#predictor': 'tab-predictor'
+        '#simulator': 'tab-simulator',
+        '#predictor': 'tab-predictor',
+        '#nba': 'tab-nba'
     };
 
     function switchTab(targetTab) {
@@ -1314,5 +1320,221 @@ function initGuidedTourAndPresets() {
             }
         });
     });
+
+    initNextBestActionEngine();
 }
+
+function initNextBestActionEngine() {
+    const nbaForm = document.getElementById('nba-eval-form');
+    if (nbaForm) {
+        nbaForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await evaluateNextBestAction();
+        });
+    }
+
+    const nbaPresets = document.querySelectorAll('.btn-nba-preset');
+    nbaPresets.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const p = btn.getAttribute('data-preset');
+            if (p === 'vip') {
+                document.getElementById('nba-recency').value = 10;
+                document.getElementById('nba-frequency').value = 18;
+                document.getElementById('nba-spend').value = 3500;
+                document.getElementById('nba-churn').value = 0.10;
+                document.getElementById('nba-ltv').value = 4800;
+                document.getElementById('nba-persona').value = 'CHAMPION';
+            } else if (p === 'at_risk') {
+                document.getElementById('nba-recency').value = 120;
+                document.getElementById('nba-frequency').value = 3;
+                document.getElementById('nba-spend').value = 450;
+                document.getElementById('nba-churn').value = 0.85;
+                document.getElementById('nba-ltv').value = 850;
+                document.getElementById('nba-persona').value = 'AT_RISK';
+            } else if (p === 'bargain') {
+                document.getElementById('nba-recency').value = 45;
+                document.getElementById('nba-frequency').value = 4;
+                document.getElementById('nba-spend').value = 320;
+                document.getElementById('nba-churn').value = 0.40;
+                document.getElementById('nba-ltv').value = 600;
+                document.getElementById('nba-persona').value = 'BARGAIN';
+            } else if (p === 'new_buyer') {
+                document.getElementById('nba-recency').value = 5;
+                document.getElementById('nba-frequency').value = 1;
+                document.getElementById('nba-spend').value = 95;
+                document.getElementById('nba-churn').value = 0.30;
+                document.getElementById('nba-ltv').value = 750;
+                document.getElementById('nba-persona').value = 'NEW_BUYER';
+            }
+            if (nbaForm) nbaForm.dispatchEvent(new Event('submit'));
+        });
+    });
+
+    loadNbaSegmentMatrix();
+}
+
+async function evaluateNextBestAction() {
+    const container = document.getElementById('nba-results-container');
+    if (!container) return;
+    container.style.display = 'block';
+    container.innerHTML = `<div class="glass-card" style="padding:20px; text-align:center;"><i class="fa-solid fa-spinner fa-spin" style="font-size:24px; color:#06B6D4;"></i><p style="margin-top:10px; font-size:13px; color:var(--text-muted);">Running multi-factor Next-Best-Action scoring engine...</p></div>`;
+
+    const payload = {
+        customer: {
+            Recency_Days: parseInt(document.getElementById('nba-recency').value) || 15,
+            Frequency_Orders: parseInt(document.getElementById('nba-frequency').value) || 5,
+            Monetary_Spend: parseFloat(document.getElementById('nba-spend').value) || 500,
+            Category_Diversity: 3,
+            Engagement_Score: 70.0,
+            Discount_Ratio: 0.20,
+            Return_Rate: 0.05,
+            Support_Tickets: 1,
+            Age: 35,
+            Preferred_Channel: "Mobile App",
+            Gender: "Female"
+        },
+        churn_risk_score: parseFloat(document.getElementById('nba-churn').value) || 0.3,
+        predicted_ltv_12m: parseFloat(document.getElementById('nba-ltv').value) || 1200,
+        is_anomaly: false,
+        persona_key: document.getElementById('nba-persona').value || "CHAMPION"
+    };
+
+    try {
+        const token = localStorage.getItem('token');
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const res = await fetch('/api/recommendations/next-best-action', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error('API Error ' + res.status);
+        const data = await res.json();
+
+        renderNbaResults(data);
+    } catch (err) {
+        container.innerHTML = `<div class="glass-card" style="padding:20px; border:1px solid rgba(244,63,94,0.3); color:#F43F5E;"><i class="fa-solid fa-circle-exclamation"></i> Error evaluating Next-Best-Action: ${err.message}</div>`;
+    }
+}
+
+function renderNbaResults(data) {
+    const container = document.getElementById('nba-results-container');
+    if (!container) return;
+
+    const top = data.top_action;
+    const recs = data.recommendations || [];
+
+    let topHtml = '';
+    if (top) {
+        topHtml = `
+            <div class="glass-card" style="margin-bottom:20px; border-left:4px solid #06B6D4; background:linear-gradient(135deg, rgba(6,182,212,0.1), rgba(0,0,0,0.4));">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;">
+                    <div>
+                        <span class="pill-badge" style="background:rgba(6,182,212,0.2); color:#06B6D4; margin-bottom:8px; display:inline-block;">
+                            <i class="fa-solid fa-trophy"></i> TOP RECOMMENDED ACTION
+                        </span>
+                        <h3 style="font-size:20px; margin:4px 0;">${top.icon} ${top.title}</h3>
+                        <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">${top.description}</p>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:28px; font-weight:800; color:#10B981;">+${top.net_roi_percent}%</div>
+                        <span style="font-size:11px; text-transform:uppercase; color:var(--text-muted); letter-spacing:0.5px;">Net ROI Score</span>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin:16px 0; background:rgba(0,0,0,0.3); padding:14px; border-radius:10px;">
+                    <div><span style="font-size:11px; color:var(--text-muted); display:block;">Priority Score</span><strong style="font-size:16px; color:#3B82F6;">${top.priority_score}/100</strong></div>
+                    <div><span style="font-size:11px; color:var(--text-muted); display:block;">Expected Conv. Rate</span><strong style="font-size:16px; color:#10B981;">${top.expected_conversion_rate}%</strong></div>
+                    <div><span style="font-size:11px; color:var(--text-muted); display:block;">Offer Unit Cost</span><strong style="font-size:16px; color:#F43F5E;">$${top.offer_cost.toFixed(2)}</strong></div>
+                    <div><span style="font-size:11px; color:var(--text-muted); display:block;">Expected LTV Lift</span><strong style="font-size:16px; color:#8B5CF6;">+$${top.expected_ltv_gain.toFixed(2)}</strong></div>
+                </div>
+
+                <div>
+                    <span style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Algorithmic Trigger Reasoning:</span>
+                    <ul style="margin:6px 0 0 18px; padding:0; font-size:12px; color:#E2E8F0;">
+                        ${top.trigger_reasons.map(r => `<li>${r}</li>`).join('')}
+                    </ul>
+                </div>
+            </div>
+        `;
+    }
+
+    let recsCardsHtml = recs.map(r => `
+        <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:16px; display:flex; justify-content:space-between; align-items:center; gap:16px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <span style="font-size:20px;">${r.icon}</span>
+                <div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <strong style="font-size:14px; color:#FFF;">${r.title}</strong>
+                        <span style="font-size:10px; padding:2px 8px; border-radius:12px; background:rgba(255,255,255,0.08); color:var(--text-muted);">${r.category}</span>
+                    </div>
+                    <p style="font-size:11px; color:var(--text-muted); margin-top:2px;">${r.description}</p>
+                </div>
+            </div>
+            <div style="text-align:right; min-width:120px;">
+                <div style="font-size:14px; font-weight:700; color:${r.net_roi_percent >= 0 ? '#10B981' : '#F43F5E'};">${r.net_roi_percent >= 0 ? '+' : ''}${r.net_roi_percent}% ROI</div>
+                <span style="font-size:11px; color:var(--text-muted);">Priority: ${r.priority_score}</span>
+            </div>
+        </div>
+    `).join('');
+
+    container.innerHTML = `
+        ${topHtml}
+        <div class="glass-card">
+            <h3 style="font-size:16px; margin-bottom:14px;"><i class="fa-solid fa-list-check"></i> Complete Priority Recommendations List</h3>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                ${recsCardsHtml}
+            </div>
+        </div>
+    `;
+}
+
+async function loadNbaSegmentMatrix() {
+    const container = document.getElementById('nba-matrix-container');
+    if (!container) return;
+
+    try {
+        const token = localStorage.getItem('token');
+        const headers = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const res = await fetch('/api/recommendations/segment-matrix', { headers });
+        if (!res.ok) throw new Error('API Error ' + res.status);
+        const data = await res.json();
+
+        const rows = (data.matrix || []).map(m => `
+            <tr>
+                <td style="padding:12px; border-bottom:1px solid rgba(255,255,255,0.05); font-weight:700;"><span style="font-size:16px; margin-right:6px;">${m.icon}</span> ${m.persona_key}</td>
+                <td style="padding:12px; border-bottom:1px solid rgba(255,255,255,0.05); color:#FFF; font-weight:600;">${m.top_action_title}</td>
+                <td style="padding:12px; border-bottom:1px solid rgba(255,255,255,0.05); color:var(--text-muted);">${m.category}</td>
+                <td style="padding:12px; border-bottom:1px solid rgba(255,255,255,0.05); text-align:center;"><span style="color:#3B82F6; font-weight:700;">${m.priority_score}</span></td>
+                <td style="padding:12px; border-bottom:1px solid rgba(255,255,255,0.05); text-align:center;"><span style="color:#10B981; font-weight:700;">+${m.net_roi_percent}%</span></td>
+                <td style="padding:12px; border-bottom:1px solid rgba(255,255,255,0.05); text-align:center; color:#F43F5E;">$${m.offer_cost.toFixed(2)}</td>
+            </tr>
+        `).join('');
+
+        container.innerHTML = `
+            <table style="width:100%; border-collapse:collapse; font-size:13px; text-align:left;">
+                <thead>
+                    <tr style="border-bottom:1px solid rgba(255,255,255,0.1); color:var(--text-muted); font-size:11px; text-transform:uppercase;">
+                        <th style="padding:10px;">Persona Segment</th>
+                        <th style="padding:10px;">Top Next-Best-Action</th>
+                        <th style="padding:10px;">Category</th>
+                        <th style="padding:10px; text-align:center;">Priority</th>
+                        <th style="padding:10px; text-align:center;">Net ROI Score</th>
+                        <th style="padding:10px; text-align:center;">Offer Cost</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows}
+                </tbody>
+            </table>
+        `;
+    } catch (err) {
+        container.innerHTML = `<p style="font-size:12px; color:#F43F5E;">Failed to load segment matrix: ${err.message}</p>`;
+    }
+}
+
 

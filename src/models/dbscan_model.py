@@ -83,26 +83,20 @@ class DBSCANSegmentationModel:
         """
         DBSCAN doesn't natively have a .predict() for new points.
         This assigns new points to the nearest non-noise cluster centroid or noise (-1).
+        Vectorized with NumPy for ultra-fast performance.
         """
         if self.labels_ is None:
             raise ValueError("Model must be fitted before calling predict.")
             
-        unique_labels = set(self.labels_) - {-1}
+        unique_labels = sorted(list(set(self.labels_) - {-1}))
         if not unique_labels:
             return np.array([-1] * len(X_sample))
             
-        centroids = {l: X_train[self.labels_ == l].mean(axis=0) for l in unique_labels}
-        
-        predictions = []
-        for x in X_sample:
-            dists = {l: np.linalg.norm(x - centroids[l]) for l in centroids}
-            min_cluster = min(dists, key=dists.get)
-            min_dist = dists[min_cluster]
-            
-            # If distance exceeds 2*eps, classify as noise
-            if min_dist > 2.5 * self.eps:
-                predictions.append(-1)
-            else:
-                predictions.append(min_cluster)
-                
-        return np.array(predictions)
+        centroids = np.array([X_train[self.labels_ == l].mean(axis=0) for l in unique_labels])
+        dists = np.linalg.norm(X_sample[:, np.newaxis, :] - centroids[np.newaxis, :, :], axis=2)
+        min_indices = np.argmin(dists, axis=1)
+        min_distances = np.min(dists, axis=1)
+
+        predictions = np.array([unique_labels[idx] if min_distances[i] <= 2.5 * self.eps else -1 for i, idx in enumerate(min_indices)])
+        return predictions
+
